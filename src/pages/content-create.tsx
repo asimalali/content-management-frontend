@@ -15,6 +15,7 @@ import { useProjects } from '@/features/projects';
 import { useTemplates } from '@/features/templates';
 import { useGenerateContent } from '@/features/content';
 import { useCreditBalance } from '@/features/credits';
+import { PublishNowSection } from '@/features/publishing';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
@@ -23,13 +24,14 @@ const formSchema = z.object({
   topic: z.string().min(1, 'أدخل الموضوع'),
   tone: z.string().optional(),
   length: z.string().optional(),
-  language: z.enum(['en', 'ar', 'both']).default('ar'),
+  language: z.enum(['en', 'ar', 'both']),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 export default function ContentCreatePage() {
   const [generatedContent, setGeneratedContent] = useState<string>('');
+  const [generatedContentId, setGeneratedContentId] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
   // Fetch data from API
@@ -78,6 +80,7 @@ export default function ContentCreatePage() {
       {
         onSuccess: (result) => {
           setGeneratedContent(result.content);
+          setGeneratedContentId(result.id);
           toast.success('تم إنشاء المحتوى بنجاح');
         },
         onError: () => {
@@ -362,6 +365,15 @@ export default function ContentCreatePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Publish Now Section - appears after content is generated */}
+      {generatedContent && form.getValues('projectId') && (
+        <PublishNowSection
+          projectId={form.getValues('projectId')}
+          initialContent={generatedContent}
+          contentItemId={generatedContentId || undefined}
+        />
+      )}
     </div>
   );
 }
