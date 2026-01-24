@@ -295,3 +295,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================================================
+   LANDING PAGE ANIMATIONS
+   ============================================================================ */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background: linear-gradient(
+    -45deg,
+    hsl(var(--primary)),
+    hsl(262 83% 70%),
+    hsl(280 80% 60%),
+    hsl(220 90% 60%),
+    hsl(var(--primary))
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 8s ease infinite;
+}

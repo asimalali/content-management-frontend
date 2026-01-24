@@ -10,6 +10,7 @@ import { AdminRoute } from '@/components/admin-route';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Pages
+import LandingPage from '@/pages/landing';
 import AuthPage from '@/pages/auth';
 import DashboardPage from '@/pages/dashboard';
 import ProjectsPage from '@/pages/projects';
@@ -28,6 +29,29 @@ import AdminDashboardPage from '@/pages/admin';
 import AdminUsersPage from '@/pages/admin/users';
 import AdminCreditsPage from '@/pages/admin/credits';
 import AdminPlansPage from '@/pages/admin/plans';
+
+// Public Route wrapper - redirects authenticated users to dashboard
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="space-y-4 w-full max-w-md p-8">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-8 w-1/2" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Redirect to="/dashboard" />;
+  }
+
+  return <>{children}</>;
+}
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -55,8 +79,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Switch>
-      {/* Auth route - no protection needed */}
+      {/* Public landing page */}
+      <Route path="/">
+        <PublicRoute>
+          <LandingPage />
+        </PublicRoute>
+      </Route>
+
+      {/* Auth route */}
       <Route path="/auth" component={AuthPage} />
+
+      {/* Dashboard - protected */}
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <DashboardPage />
+        </ProtectedRoute>
+      </Route>
 
       {/* Protected routes - more specific paths first */}
       <Route path="/projects/new">
@@ -158,12 +196,6 @@ function AppRoutes() {
         </AdminRoute>
       </Route>
 
-      {/* Dashboard - exact match for "/" */}
-      <Route path="/">
-        <ProtectedRoute>
-          <DashboardPage />
-        </ProtectedRoute>
-      </Route>
     </Switch>
   );
 }

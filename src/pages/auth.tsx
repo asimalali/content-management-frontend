@@ -49,7 +49,7 @@ export default function AuthPage() {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    return <Redirect to="/" />;
+    return <Redirect to="/dashboard" />;
   }
 
   // Show OTP verification if we have a pending user

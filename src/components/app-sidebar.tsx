@@ -31,7 +31,7 @@ import { useCreditBalance } from '@/features/credits';
 const menuItems = [
   {
     title: 'لوحة التحكم',
-    url: '/',
+    url: '/dashboard',
     icon: LayoutDashboard,
   },
   {

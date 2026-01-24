@@ -26,7 +26,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
-        setLocation('/auth');
+        setLocation('/');
       },
     });
   };
