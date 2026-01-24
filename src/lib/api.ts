@@ -1,6 +1,9 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Use VITE_API_URL for production (full backend URL + /api), fallback to /api for local dev
+const API_BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
 
 // Create axios instance
 export const api = axios.create({
