@@ -4,6 +4,7 @@ import {
   HeroSection,
   FeaturesSection,
   PlatformsSection,
+  VisionMissionSection,
   PricingSection,
   CtaSection,
   LandingFooter,
@@ -22,6 +23,7 @@ export default function LandingPage() {
         <HeroSection />
         <FeaturesSection />
         <PlatformsSection />
+        <VisionMissionSection />
         <PricingSection />
         <CtaSection />
       </main>
