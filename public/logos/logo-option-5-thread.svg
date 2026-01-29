@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <defs>
+    <linearGradient id="purpleGradient5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#C4B5FD"/>
+      <stop offset="50%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#5B21B6"/>
+    </linearGradient>
+    <linearGradient id="threadGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#EC4899"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Story Thread Icon - representing continuous narrative -->
+  <g transform="translate(30, 30)">
+    <!-- Main thread/ribbon flowing -->
+    <path d="M10 70
+             Q30 30, 60 50
+             Q90 70, 80 100
+             Q70 130, 100 120
+             Q130 110, 120 80
+             Q110 50, 130 40"
+          stroke="url(#threadGradient)"
+          stroke-width="10"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+
+    <!-- Secondary thinner thread -->
+    <path d="M25 65
+             Q40 40, 65 55
+             Q90 75, 78 100"
+          stroke="#A78BFA"
+          stroke-width="4"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.5"/>
+
+    <!-- Starting point spark -->
+    <circle cx="10" cy="70" r="8" fill="#8B5CF6"/>
+    <circle cx="10" cy="70" r="12" fill="none" stroke="#C4B5FD" stroke-width="2" opacity="0.5"/>
+
+    <!-- End point spark -->
+    <circle cx="130" cy="40" r="6" fill="#EC4899"/>
+    <circle cx="130" cy="40" r="10" fill="none" stroke="#F9A8D4" stroke-width="2" opacity="0.5"/>
+
+    <!-- Small accent dots along path -->
+    <circle cx="60" cy="50" r="3" fill="#A78BFA"/>
+    <circle cx="100" cy="120" r="3" fill="#D946EF"/>
+  </g>
+
+  <!-- Arabic Text: سَـرْد -->
+  <text x="180" y="80" font-family="Arial, sans-serif" font-size="50" font-weight="bold" fill="#1F2937" direction="rtl">
+    سَـرْد
+  </text>
+
+  <!-- Decorative underline -->
+  <path d="M180 95 Q220 100, 260 95 Q300 90, 330 95" stroke="url(#threadGradient)" stroke-width="2" fill="none"/>
+
+  <!-- English Text: Sard -->
+  <text x="180" y="130" font-family="Arial, sans-serif" font-size="26" font-weight="400" fill="#4B5563" letter-spacing="5">
+    SARD
+  </text>
+
+  <!-- Tagline -->
+  <text x="180" y="160" font-family="Arial, sans-serif" font-size="11" fill="#9CA3AF" letter-spacing="1">
+    Weaving Stories That Matter
+  </text>
+</svg>
