@@ -5,6 +5,7 @@ import {
   FeaturesSection,
   PlatformsSection,
   VisionMissionSection,
+  BrandIdentityGrid,
   PricingSection,
   CtaSection,
   LandingFooter,
@@ -24,6 +25,7 @@ export default function LandingPage() {
         <FeaturesSection />
         <PlatformsSection />
         <VisionMissionSection />
+        <BrandIdentityGrid />
         <PricingSection />
         <CtaSection />
       </main>
