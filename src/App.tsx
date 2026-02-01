@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Router, Route, Switch, Redirect } from 'wouter';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme-provider';
+import { BrandProvider } from '@/components/brand-provider';
 import { queryClient } from '@/lib/query-client';
 import { useAuth } from '@/features/auth';
 import { AppLayout } from '@/components/layout/app-layout';
@@ -203,11 +204,13 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="content-platform-theme">
-        <Router>
-          <AppRoutes />
-        </Router>
-        <Toaster position="top-center" />
+      <ThemeProvider defaultTheme="system" storageKey="sard-theme">
+        <BrandProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+          <Toaster position="top-center" />
+        </BrandProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useProjects } from '@/features/projects';
 import { useContentList } from '@/features/content';
 import { useCreditBalance } from '@/features/credits';
+import { BrandName } from '@/components/brand-name';
 
 // Stats card component
 function StatsCard({
@@ -104,7 +105,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">لوحة التحكم</h1>
         <p className="text-muted-foreground">
-          مرحباً بك في منصة إدارة المحتوى
+          مرحباً بك في <BrandName variant="short" />
         </p>
       </div>
 

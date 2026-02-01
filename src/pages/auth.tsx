@@ -14,6 +14,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { useAuth } from '@/features/auth';
 import { getErrorMessage } from '@/lib/api';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { BrandName } from '@/components/brand-name';
 
 const emailSchema = z.object({
   email: z.string().email('البريد الإلكتروني غير صالح'),
@@ -76,7 +77,9 @@ export default function AuthPage() {
 
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">منصة إدارة المحتوى</CardTitle>
+          <CardTitle className="text-2xl">
+            <BrandName variant="short" />
+          </CardTitle>
           <CardDescription>
             أنشئ محتوى احترافي بالذكاء الاصطناعي
           </CardDescription>

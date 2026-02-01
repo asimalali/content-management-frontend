@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { Sparkles, Menu, X, Globe } from 'lucide-react';
+import { Menu, X, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { BrandLogo } from '@/components/brand-logo';
+import { BrandName } from '@/components/brand-name';
 import { useLanguage, t } from '@/hooks/use-language';
 
 const translations = {
   login: { ar: 'تسجيل الدخول', en: 'Login' },
   getStarted: { ar: 'ابدأ مجاناً', en: 'Get Started Free' },
-  platformName: { ar: 'منصة المحتوى', en: 'Content Platform' },
 };
 
 export function LandingHeader() {
@@ -20,10 +21,8 @@ export function LandingHeader() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <span className="font-bold text-lg">{t(translations.platformName, language)}</span>
+          <BrandLogo size="sm" />
+          <BrandName variant="short" className="font-bold text-lg" />
         </Link>
 
         {/* Desktop Navigation */}

@@ -12,6 +12,8 @@ import {
   Loader2,
   Shield,
 } from 'lucide-react';
+import { BrandLogo } from '@/components/brand-logo';
+import { BrandName, BrandTagline } from '@/components/brand-name';
 import { useAuth } from '@/features/auth';
 import {
   Sidebar,
@@ -91,12 +93,12 @@ export function AppSidebar() {
     <Sidebar side="right" collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="h-5 w-5" />
-          </div>
+          <BrandLogo size="md" />
           <div className="group-data-[collapsible=icon]:hidden">
-            <h2 className="text-lg font-bold">منصة المحتوى</h2>
-            <p className="text-xs text-muted-foreground">إدارة ذكية للمحتوى</p>
+            <h2 className="text-lg font-bold">
+              <BrandName variant="short" />
+            </h2>
+            <BrandTagline className="text-xs text-muted-foreground" />
           </div>
         </div>
       </SidebarHeader>

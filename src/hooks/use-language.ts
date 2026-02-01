@@ -20,7 +20,7 @@ export const useLanguage = create<LanguageState>()(
         })),
     }),
     {
-      name: 'content-platform-language',
+      name: 'sard-language',
     }
   )
 );
