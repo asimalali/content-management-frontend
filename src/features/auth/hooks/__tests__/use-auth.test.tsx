@@ -3,7 +3,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from '../use-auth';
 import { tokenStorage } from '@/lib/api';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 // Mock tokenStorage
 vi.mock('@/lib/api', async () => {
