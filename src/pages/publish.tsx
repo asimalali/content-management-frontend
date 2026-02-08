@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Instagram,
   ArrowLeft,
+  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ import { useProjects } from '@/features/projects';
 import { useContentList } from '@/features/content';
 import { useConnectedAccounts, useDestinations, type ConnectedAccount, type Destination } from '@/features/integrations';
 import { usePublishInstant, type PublishDestination, type PublishResult } from '@/features/publishing';
+import { OptimizationDialog } from '@/features/content-optimization';
 import { toast } from 'sonner';
 
 // Platform icons
@@ -73,6 +75,7 @@ export default function PublishPage() {
   const [selectedDestinations, setSelectedDestinations] = useState<SelectedDestination[]>([]);
   const [publishResult, setPublishResult] = useState<PublishResult | null>(null);
   const [contentInitialized, setContentInitialized] = useState(false);
+  const [showOptimizationDialog, setShowOptimizationDialog] = useState(false);
 
   // Fetch data
   const { data: projects, isLoading: isLoadingProjects } = useProjects();
@@ -117,6 +120,29 @@ export default function PublishPage() {
 
   const handleRemoveHashtag = (tag: string) => {
     setHashtags(hashtags.filter(h => h !== tag));
+  };
+
+  // Handle optimization completion
+  const handleOptimizationComplete = (optimizedTexts: Record<string, string>) => {
+    // For now, just use the first optimized text
+    const firstOptimizedText = Object.values(optimizedTexts)[0];
+    if (firstOptimizedText) {
+      setPostText(firstOptimizedText);
+      toast.success('تم تحسين المحتوى بنجاح');
+    }
+  };
+
+  // Handle opening optimization dialog
+  const handleOpenOptimization = () => {
+    if (!selectedProjectId) {
+      toast.error('يرجى اختيار المشروع أولاً');
+      return;
+    }
+    if (!postText.trim()) {
+      toast.error('يرجى كتابة نص المنشور أولاً');
+      return;
+    }
+    setShowOptimizationDialog(true);
   };
 
   // Handle destination toggle
@@ -308,7 +334,20 @@ export default function PublishPage() {
 
               {/* Post Text */}
               <div className="space-y-2">
-                <Label>نص المنشور</Label>
+                <div className="flex items-center justify-between">
+                  <Label>نص المنشور</Label>
+                  {selectedProjectId && postText.trim() && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenOptimization}
+                      className="h-8 px-3 text-xs"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      تحسين بالذكاء الاصطناعي
+                    </Button>
+                  )}
+                </div>
                 <Textarea
                   placeholder="اكتب نص المنشور هنا..."
                   value={postText}
@@ -515,6 +554,16 @@ export default function PublishPage() {
           </Card>
         </div>
       </div>
+
+      {/* Optimization Dialog */}
+      <OptimizationDialog
+        isOpen={showOptimizationDialog}
+        onClose={() => setShowOptimizationDialog(false)}
+        originalText={postText}
+        hashtags={hashtags}
+        projectId={selectedProjectId}
+        onOptimizationComplete={handleOptimizationComplete}
+      />
     </div>
   );
 }
