@@ -5,7 +5,7 @@ import type {
   CreatePostRequest,
   InstantPublishRequest,
   PublishResult,
-  PostMetrics,
+  PostMetricsData,
 } from '../types';
 
 export const publishingApi = {
@@ -52,8 +52,8 @@ export const publishingApi = {
   },
 
   // Get post metrics
-  getPostMetrics: async (jobId: string): Promise<PostMetrics> => {
-    const response = await api.get<PostMetrics>(`/posts/jobs/${jobId}/metrics`);
+  getPostMetrics: async (jobId: string): Promise<PostMetricsData> => {
+    const response = await api.get<PostMetricsData>(`/posts/jobs/${jobId}/metrics`);
     return response.data;
   },
 };

@@ -59,7 +59,7 @@ export interface PublishResult {
   failed: number;
 }
 
-export interface PostMetrics {
+export interface PostMetricsData {
   success: boolean;
   status?: string;
   likes?: number;
