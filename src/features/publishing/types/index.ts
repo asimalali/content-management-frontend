@@ -58,3 +58,14 @@ export interface PublishResult {
   successful: number;
   failed: number;
 }
+
+export interface PostMetrics {
+  success: boolean;
+  status?: string;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  views?: number;
+  errorMessage?: string;
+  lastUpdated?: string;
+}

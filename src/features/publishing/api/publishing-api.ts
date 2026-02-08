@@ -5,6 +5,7 @@ import type {
   CreatePostRequest,
   InstantPublishRequest,
   PublishResult,
+  PostMetrics,
 } from '../types';
 
 export const publishingApi = {
@@ -48,5 +49,11 @@ export const publishingApi = {
   // Delete post
   deletePost: async (postId: string): Promise<void> => {
     await api.delete(`/posts/${postId}`);
+  },
+
+  // Get post metrics
+  getPostMetrics: async (jobId: string): Promise<PostMetrics> => {
+    const response = await api.get<PostMetrics>(`/posts/jobs/${jobId}/metrics`);
+    return response.data;
   },
 };

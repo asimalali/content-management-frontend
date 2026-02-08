@@ -39,6 +39,7 @@ import {
   usePostJobs,
   useRetryJob,
   useDeletePost,
+  PostMetrics,
   type Post,
   type PostJob,
 } from '@/features/publishing';
@@ -311,59 +312,64 @@ function JobItem({ job }: { job: PostJob }) {
   };
 
   return (
-    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-      <div className="flex items-center gap-3">
-        <span className="w-8 h-8 flex items-center justify-center bg-background rounded-full">
-          {platformIcons[job.platformName] || job.platformName[0]}
-        </span>
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-sm">{job.destinationName}</p>
-            <Badge variant="secondary" className={statusConfig.color}>
-              {statusConfig.icon}
-              <span className="mr-1">{statusConfig.label}</span>
-            </Badge>
+    <div className="p-3 bg-muted rounded-lg space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="w-8 h-8 flex items-center justify-center bg-background rounded-full">
+            {platformIcons[job.platformName] || job.platformName[0]}
+          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-sm">{job.destinationName}</p>
+              <Badge variant="secondary" className={statusConfig.color}>
+                {statusConfig.icon}
+                <span className="mr-1">{statusConfig.label}</span>
+              </Badge>
+            </div>
+            {job.publishedAt && (
+              <p className="text-xs text-muted-foreground">
+                {new Date(job.publishedAt).toLocaleDateString('ar-SA', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+            {job.errorMessage && (
+              <p className="text-xs text-red-500 mt-1">{job.errorMessage}</p>
+            )}
           </div>
-          {job.publishedAt && (
-            <p className="text-xs text-muted-foreground">
-              {new Date(job.publishedAt).toLocaleDateString('ar-SA', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {job.platformUrl && (
+            <Button variant="ghost" size="sm" asChild>
+              <a href={job.platformUrl} target="_blank" rel="noopener noreferrer">
+                <Eye className="h-4 w-4" />
+              </a>
+            </Button>
           )}
-          {job.errorMessage && (
-            <p className="text-xs text-red-500 mt-1">{job.errorMessage}</p>
+          {job.status === 'Failed' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRetry}
+              disabled={retryJob.isPending}
+            >
+              {retryJob.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <RotateCcw className="h-4 w-4 ml-1" />
+                  إعادة
+                </>
+              )}
+            </Button>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {job.platformUrl && (
-          <Button variant="ghost" size="sm" asChild>
-            <a href={job.platformUrl} target="_blank" rel="noopener noreferrer">
-              <Eye className="h-4 w-4" />
-            </a>
-          </Button>
-        )}
-        {job.status === 'Failed' && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRetry}
-            disabled={retryJob.isPending}
-          >
-            {retryJob.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <RotateCcw className="h-4 w-4 ml-1" />
-                إعادة
-              </>
-            )}
-          </Button>
-        )}
-      </div>
+      {/* Add metrics component for published posts */}
+      <PostMetrics job={job} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ export const postKeys = {
   list: (projectId?: string) => projectId ? ['posts', { projectId }] : ['posts'] as const,
   detail: (id: string) => ['posts', id] as const,
   jobs: (id: string) => ['posts', id, 'jobs'] as const,
+  metrics: (jobId: string) => ['posts', 'jobs', jobId, 'metrics'] as const,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -37,6 +38,17 @@ export function usePostJobs(postId: string | undefined) {
     queryKey: postKeys.jobs(postId!),
     queryFn: () => publishingApi.getJobs(postId!),
     enabled: !!postId,
+  });
+}
+
+// Get post metrics
+export function usePostMetrics(jobId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: postKeys.metrics(jobId!),
+    queryFn: () => publishingApi.getPostMetrics(jobId!),
+    enabled: !!jobId && enabled,
+    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 25000, // Data is fresh for 25 seconds
   });
 }
 
