@@ -13,17 +13,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useProjects } from '@/features/projects';
 import { useTemplates } from '@/features/templates';
-import { useGenerateContent } from '@/features/content';
+import { useGenerateContent, type ContentTone, type ContentLength } from '@/features/content';
 import { useCreditBalance } from '@/features/credits';
 import { PublishNowSection } from '@/features/publishing';
 import { toast } from 'sonner';
+
+const toneOptions = ['professional', 'casual', 'friendly', 'formal'] as const;
+const lengthOptions = ['short', 'medium', 'long'] as const;
 
 const formSchema = z.object({
   projectId: z.string().min(1, 'اختر مشروعاً'),
   templateId: z.string().min(1, 'اختر قالباً'),
   topic: z.string().min(1, 'أدخل الموضوع'),
-  tone: z.string().optional(),
-  length: z.string().optional(),
+  tone: z.enum(toneOptions).optional(),
+  length: z.enum(lengthOptions).optional(),
   language: z.enum(['en', 'ar', 'both']),
 });
 
@@ -75,8 +78,8 @@ export default function ContentCreatePage() {
           // Note: tone and length are now passed as top-level params, not in inputs
         },
         language: data.language,
-        tone: data.tone || 'professional',
-        length: data.length || 'medium',
+        tone: (data.tone ?? 'professional') as ContentTone,
+        length: (data.length ?? 'medium') as ContentLength,
       },
       {
         onSuccess: (result) => {
