@@ -31,16 +31,10 @@ export interface UpdateProjectRequest {
 // Brand DNA types
 export interface BrandDna {
   id: string;
-  projectId: string;
-  voice?: string;
-  tone?: string;
-  targetAudience?: string;
-  keyMessages?: string[];
-  competitors?: string[];
-  uniqueSellingPoints?: string[];
-  brandValues?: string[];
-  createdAt: string;
-  updatedAt?: string;
+  voice: string;
+  tone: string;
+  targetAudience: string;
+  keyMessages: string[];
 }
 
 export interface GenerateBrandDnaRequest {

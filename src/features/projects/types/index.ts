@@ -31,22 +31,15 @@ export interface UpdateProjectRequest {
 
 export interface BrandDna {
   id: string;
-  projectId: string;
-  tone: string;
   voice: string;
-  values: string[];
+  tone: string;
   targetAudience: string;
-  uniqueSellingPoints: string[];
-  keywords: string[];
-  createdAt: string;
-  updatedAt?: string;
+  keyMessages: string[];
 }
 
 export interface UpdateBrandDnaRequest {
-  tone?: string;
   voice?: string;
-  values?: string[];
+  tone?: string;
   targetAudience?: string;
-  uniqueSellingPoints?: string[];
-  keywords?: string[];
+  keyMessages?: string[];
 }

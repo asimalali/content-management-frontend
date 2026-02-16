@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +11,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useProject, useCreateProject, useUpdateProject } from '@/features/projects';
+import {
+  useProject,
+  useCreateProject,
+  useUpdateProject,
+  useBrandDna,
+  useGenerateBrandDna,
+  useUpdateBrandDna,
+} from '@/features/projects';
 import { toast } from 'sonner';
 
 const projectSchema = z.object({
@@ -60,6 +67,16 @@ export default function ProjectFormPage() {
   // Mutations
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
+  const generateBrandDna = useGenerateBrandDna();
+  const updateBrandDna = useUpdateBrandDna();
+
+  const { data: brandDna, isLoading: isLoadingBrandDna } = useBrandDna(params.id);
+  const [brandDnaForm, setBrandDnaForm] = useState({
+    voice: '',
+    tone: '',
+    targetAudience: '',
+    keyMessagesText: '',
+  });
 
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
@@ -84,6 +101,17 @@ export default function ProjectFormPage() {
       });
     }
   }, [isEditing, project, form]);
+
+  useEffect(() => {
+    if (!brandDna) return;
+
+    setBrandDnaForm({
+      voice: brandDna.voice || '',
+      tone: brandDna.tone || '',
+      targetAudience: brandDna.targetAudience || '',
+      keyMessagesText: (brandDna.keyMessages || []).join('\n'),
+    });
+  }, [brandDna]);
 
   const onSubmit = async (data: ProjectFormData) => {
     if (isEditing && params.id) {
@@ -115,6 +143,63 @@ export default function ProjectFormPage() {
   };
 
   const isSubmitting = createProject.isPending || updateProject.isPending;
+  const hasBrandDna =
+    !!brandDna ||
+    brandDnaForm.voice.trim().length > 0 ||
+    brandDnaForm.tone.trim().length > 0 ||
+    brandDnaForm.targetAudience.trim().length > 0 ||
+    brandDnaForm.keyMessagesText.trim().length > 0;
+  const isSavingBrandDna = generateBrandDna.isPending || updateBrandDna.isPending;
+  const hasRequiredBrandDnaFields =
+    brandDnaForm.voice.trim().length > 0 &&
+    brandDnaForm.tone.trim().length > 0 &&
+    brandDnaForm.targetAudience.trim().length > 0;
+
+  const handleGenerateBrandDna = () => {
+    if (!params.id) return;
+
+    generateBrandDna.mutate(params.id, {
+      onSuccess: (generatedDna) => {
+        setBrandDnaForm({
+          voice: generatedDna.voice || '',
+          tone: generatedDna.tone || '',
+          targetAudience: generatedDna.targetAudience || '',
+          keyMessagesText: (generatedDna.keyMessages || []).join('\n'),
+        });
+        toast.success('تم توليد بصمة العلامة التجارية');
+      },
+      onError: () => {
+        toast.error('فشل توليد بصمة العلامة التجارية');
+      },
+    });
+  };
+
+  const handleSaveBrandDna = () => {
+    if (!params.id) return;
+
+    updateBrandDna.mutate(
+      {
+        projectId: params.id,
+        data: {
+          voice: brandDnaForm.voice.trim(),
+          tone: brandDnaForm.tone.trim(),
+          targetAudience: brandDnaForm.targetAudience.trim(),
+          keyMessages: brandDnaForm.keyMessagesText
+            .split('\n')
+            .map((message) => message.trim())
+            .filter((message) => message.length > 0),
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('تم حفظ بصمة العلامة التجارية');
+        },
+        onError: () => {
+          toast.error('فشل حفظ بصمة العلامة التجارية');
+        },
+      }
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -268,33 +353,140 @@ export default function ProjectFormPage() {
           </CardContent>
         </Card>
 
-        {/* Tips Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>نصائح</CardTitle>
-            <CardDescription>
-              لتحقيق أفضل النتائج
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <div>
-              <h4 className="font-medium text-foreground mb-1">اسم المشروع</h4>
-              <p>استخدم اسماً واضحاً يساعدك على تمييز المشروع بسهولة.</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground mb-1">العلامة التجارية</h4>
-              <p>أدخل الاسم التجاري كما تريده أن يظهر في المحتوى المُنشأ.</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground mb-1">الصناعة</h4>
-              <p>اختيار الصناعة الصحيحة يساعد الذكاء الاصطناعي على فهم سياق عملك.</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground mb-1">الموقع الإلكتروني</h4>
-              <p>إضافة موقعك يتيح للذكاء الاصطناعي تحليل هوية علامتك التجارية.</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          {isEditing && (
+            <Card>
+              <CardHeader className="space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle>بصمة العلامة التجارية (Brand DNA)</CardTitle>
+                    <CardDescription>
+                      قم بتوليد أو تعديل بصمة العلامة لتحسين جودة المحتوى
+                    </CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGenerateBrandDna}
+                    disabled={generateBrandDna.isPending || !params.id}
+                  >
+                    {generateBrandDna.isPending && (
+                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                    )}
+                    {hasBrandDna ? 'إعادة التوليد' : 'توليد البصمة'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoadingBrandDna ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {!hasBrandDna && (
+                      <p className="text-sm text-muted-foreground">
+                        لا توجد بصمة علامة محفوظة بعد. اضغط "توليد البصمة" لإنشائها.
+                      </p>
+                    )}
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">الصوت</p>
+                      <Input
+                        value={brandDnaForm.voice}
+                        onChange={(event) =>
+                          setBrandDnaForm((current) => ({ ...current, voice: event.target.value }))
+                        }
+                        placeholder="مثال: احترافي ودود"
+                        disabled={!hasBrandDna || isSavingBrandDna}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">النبرة</p>
+                      <Input
+                        value={brandDnaForm.tone}
+                        onChange={(event) =>
+                          setBrandDnaForm((current) => ({ ...current, tone: event.target.value }))
+                        }
+                        placeholder="مثال: واضحة ومباشرة"
+                        disabled={!hasBrandDna || isSavingBrandDna}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">الجمهور المستهدف</p>
+                      <Input
+                        value={brandDnaForm.targetAudience}
+                        onChange={(event) =>
+                          setBrandDnaForm((current) => ({ ...current, targetAudience: event.target.value }))
+                        }
+                        placeholder="مثال: أصحاب المشاريع الصغيرة"
+                        disabled={!hasBrandDna || isSavingBrandDna}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">الرسائل الرئيسية (سطر لكل رسالة)</p>
+                      <Textarea
+                        value={brandDnaForm.keyMessagesText}
+                        onChange={(event) =>
+                          setBrandDnaForm((current) => ({ ...current, keyMessagesText: event.target.value }))
+                        }
+                        placeholder="اكتب كل رسالة في سطر مستقل"
+                        rows={5}
+                        disabled={!hasBrandDna || isSavingBrandDna}
+                      />
+                    </div>
+
+                    <Button
+                      type="button"
+                      className="w-full"
+                      onClick={handleSaveBrandDna}
+                      disabled={!hasBrandDna || isSavingBrandDna || !hasRequiredBrandDnaFields}
+                    >
+                      {updateBrandDna.isPending && (
+                        <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                      )}
+                      حفظ بصمة العلامة
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tips Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>نصائح</CardTitle>
+              <CardDescription>
+                لتحقيق أفضل النتائج
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <div>
+                <h4 className="font-medium text-foreground mb-1">اسم المشروع</h4>
+                <p>استخدم اسماً واضحاً يساعدك على تمييز المشروع بسهولة.</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-foreground mb-1">العلامة التجارية</h4>
+                <p>أدخل الاسم التجاري كما تريده أن يظهر في المحتوى المُنشأ.</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-foreground mb-1">الصناعة</h4>
+                <p>اختيار الصناعة الصحيحة يساعد الذكاء الاصطناعي على فهم سياق عملك.</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-foreground mb-1">الموقع الإلكتروني</h4>
+                <p>إضافة موقعك يتيح للذكاء الاصطناعي تحليل هوية علامتك التجارية.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

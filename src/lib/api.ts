@@ -13,15 +13,23 @@ export const api = axios.create({
   },
 });
 
-// Token management
+// Token management using localStorage for persistence across page refreshes
 export const tokenStorage = {
-  getAccessToken: () => localStorage.getItem('accessToken'),
-  getRefreshToken: () => localStorage.getItem('refreshToken'),
+  getAccessToken: () => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('accessToken');
+  },
+  getRefreshToken: () => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('refreshToken');
+  },
   setTokens: (accessToken: string, refreshToken: string) => {
+    if (typeof window === 'undefined') return;
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
   },
   clearTokens: () => {
+    if (typeof window === 'undefined') return;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
   },

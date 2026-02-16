@@ -17,12 +17,16 @@ export interface ContentItem {
 }
 
 export type ContentLanguage = 'en' | 'ar' | 'both';
+export type ContentTone = 'professional' | 'casual' | 'friendly' | 'formal';
+export type ContentLength = 'short' | 'medium' | 'long';
 
 export interface GenerateContentRequest {
   projectId: string;
   templateId: string;
   inputs: Record<string, string>;
   language?: ContentLanguage;
+  tone?: ContentTone;
+  length?: ContentLength;
 }
 
 export interface UpdateContentRequest {

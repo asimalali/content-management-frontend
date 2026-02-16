@@ -72,10 +72,11 @@ export default function ContentCreatePage() {
         templateId: data.templateId,
         inputs: {
           topic: data.topic,
-          tone: data.tone || 'professional',
-          length: data.length || 'medium',
+          // Note: tone and length are now passed as top-level params, not in inputs
         },
         language: data.language,
+        tone: data.tone || 'professional',
+        length: data.length || 'medium',
       },
       {
         onSuccess: (result) => {
