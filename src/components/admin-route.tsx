@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Redirect } from 'wouter';
 import { useAuth } from '@/features/auth';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,5 +34,19 @@ export function AdminRoute({ children }: AdminRouteProps) {
     return <Redirect to="/" />;
   }
 
-  return <>{children}</>;
+  return (
+    <Suspense fallback={
+      <div className="space-y-4 p-8">
+        <Skeleton className="h-10 w-1/3" />
+        <Skeleton className="h-6 w-1/4" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-8">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+      </div>
+    }>
+      {children}
+    </Suspense>
+  );
 }

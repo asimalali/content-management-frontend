@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Check, Copy, AlertCircle } from 'lucide-react';
-import type { Platform } from '@/types/integration';
-import { useOptimizeForMultiplePlatforms } from '../hooks/useOptimization';
+import type { Platform } from '@/features/integrations';
+import { useOptimizeForMultiplePlatforms } from '../hooks/use-optimization';
 import type { OptimizationDialogProps, PlatformOptimizationResponse } from '../types';
 
 const PLATFORMS: Platform[] = ['X', 'Facebook', 'Instagram', 'TikTok'];
@@ -37,11 +37,11 @@ export function OptimizationDialog({
   const handleOptimize = async () => {
     try {
       const result = await optimizeMutation.mutateAsync({
-        projectId,
-        originalText,
-        hashtags,
-        targetPlatforms: selectedPlatforms,
-        language: 'ar',
+        ProjectId: projectId,
+        OriginalText: originalText,
+        Hashtags: hashtags,
+        TargetPlatforms: selectedPlatforms,
+        Language: 'ar',
       });
 
       setOptimizations(result.data.optimizations);

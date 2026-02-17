@@ -20,16 +20,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -44,6 +34,10 @@ import {
   type PostJob,
 } from '@/features/publishing';
 import { toast } from 'sonner';
+import { POST_PREVIEW_LENGTH } from '@/config/constants';
+import { truncateText, formatDateTime } from '@/utils';
+import { PageHeader } from '@/components/page-header';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 // Platform icons
 const platformIcons: Record<string, React.ReactNode> = {
@@ -111,20 +105,18 @@ export default function PostsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">المنشورات</h1>
-          <p className="text-muted-foreground">
-            عرض وإدارة منشوراتك على منصات التواصل الاجتماعي
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/publish">
-            <Plus className="h-4 w-4 ml-2" />
-            نشر جديد
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="المنشورات"
+        description="عرض وإدارة منشوراتك على منصات التواصل الاجتماعي"
+        action={
+          <Button asChild>
+            <Link href="/publish">
+              <Plus className="h-4 w-4 ml-2" />
+              نشر جديد
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Posts List */}
       {isLoading ? (
@@ -161,27 +153,14 @@ export default function PostsPage() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد من حذف المنشور؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف المنشور نهائياً. هذا الإجراء لا يمكن التراجع عنه.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletePost.isPending}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deletePost.isPending}
-            >
-              {deletePost.isPending && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={() => setDeleteId(null)}
+        title="هل أنت متأكد من حذف المنشور؟"
+        description="سيتم حذف المنشور نهائياً. هذا الإجراء لا يمكن التراجع عنه."
+        onConfirm={handleDelete}
+        isPending={deletePost.isPending}
+      />
     </div>
   );
 }
@@ -201,17 +180,11 @@ function PostCard({ post, onDelete }: { post: Post; onDelete: () => void }) {
           <div className="space-y-1">
             <CardTitle className="text-lg">
               <span className="line-clamp-1">
-                {post.postText.substring(0, 50)}{post.postText.length > 50 ? '...' : ''}
+                {truncateText(post.postText, POST_PREVIEW_LENGTH)}
               </span>
             </CardTitle>
             <CardDescription>
-              {new Date(post.createdAt).toLocaleDateString('ar-SA', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {formatDateTime(post.createdAt)}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -328,10 +301,7 @@ function JobItem({ job }: { job: PostJob }) {
             </div>
             {job.publishedAt && (
               <p className="text-xs text-muted-foreground">
-                {new Date(job.publishedAt).toLocaleDateString('ar-SA', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {formatDateTime(job.publishedAt)}
               </p>
             )}
             {job.errorMessage && (

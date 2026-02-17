@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Router, Route, Switch, Redirect } from 'wouter';
 import { Toaster } from '@/components/ui/sonner';
@@ -9,27 +10,46 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { AdminRoute } from '@/components/admin-route';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FeatureGate } from '@/components/feature-gate';
 
-// Pages
+// Eagerly loaded pages (entry points)
 import LandingPage from '@/pages/landing';
 import AuthPage from '@/pages/auth';
-import DashboardPage from '@/pages/dashboard';
-import ProjectsPage from '@/pages/projects';
-import ProjectFormPage from '@/pages/project-form';
-import TemplatesPage from '@/pages/templates';
-import ContentCreatePage from '@/pages/content-create';
-import ContentLibraryPage from '@/pages/content-library';
-import PlansPage from '@/pages/plans';
-import SettingsPage from '@/pages/settings';
-import OAuthCallbackPage from '@/pages/settings/oauth-callback';
-import PublishPage from '@/pages/publish';
-import PostsPage from '@/pages/posts';
 
-// Admin Pages
-import AdminDashboardPage from '@/pages/admin';
-import AdminUsersPage from '@/pages/admin/users';
-import AdminCreditsPage from '@/pages/admin/credits';
-import AdminPlansPage from '@/pages/admin/plans';
+// Lazy loaded pages
+const DashboardPage = lazy(() => import('@/pages/dashboard'));
+const ProjectsPage = lazy(() => import('@/pages/projects'));
+const ProjectFormPage = lazy(() => import('@/pages/project-form'));
+const TemplatesPage = lazy(() => import('@/pages/templates'));
+const ContentCreatePage = lazy(() => import('@/pages/content-create'));
+const ContentLibraryPage = lazy(() => import('@/pages/content-library'));
+const PlansPage = lazy(() => import('@/pages/plans'));
+const SettingsPage = lazy(() => import('@/pages/settings'));
+const OAuthCallbackPage = lazy(() => import('@/pages/settings/oauth-callback'));
+const PublishPage = lazy(() => import('@/pages/publish'));
+const PostsPage = lazy(() => import('@/pages/posts'));
+const CalendarPage = lazy(() => import('@/pages/calendar'));
+
+// Lazy loaded admin pages
+const AdminDashboardPage = lazy(() => import('@/pages/admin'));
+const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
+const AdminCreditsPage = lazy(() => import('@/pages/admin/credits'));
+const AdminPlansPage = lazy(() => import('@/pages/admin/plans'));
+const AdminFeatureFlagsPage = lazy(() => import('@/pages/admin/feature-flags'));
+
+function PageSkeleton() {
+  return (
+    <div className="space-y-4 p-8">
+      <Skeleton className="h-10 w-1/3" />
+      <Skeleton className="h-6 w-1/4" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-8">
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+      </div>
+    </div>
+  );
+}
 
 // Public Route wrapper - redirects authenticated users to dashboard
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -74,7 +94,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Redirect to="/auth" />;
   }
 
-  return <AppLayout>{children}</AppLayout>;
+  return (
+    <AppLayout>
+      <Suspense fallback={<PageSkeleton />}>
+        {children}
+      </Suspense>
+    </AppLayout>
+  );
 }
 
 function AppRoutes() {
@@ -100,37 +126,49 @@ function AppRoutes() {
       {/* Protected routes - more specific paths first */}
       <Route path="/projects/new">
         <ProtectedRoute>
-          <ProjectFormPage />
+          <FeatureGate feature="projects">
+            <ProjectFormPage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
       <Route path="/projects/:id/edit">
         <ProtectedRoute>
-          <ProjectFormPage />
+          <FeatureGate feature="projects">
+            <ProjectFormPage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
       <Route path="/projects">
         <ProtectedRoute>
-          <ProjectsPage />
+          <FeatureGate feature="projects">
+            <ProjectsPage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
       <Route path="/templates">
         <ProtectedRoute>
-          <TemplatesPage />
+          <FeatureGate feature="templates">
+            <TemplatesPage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
       <Route path="/create">
         <ProtectedRoute>
-          <ContentCreatePage />
+          <FeatureGate feature="content_generation">
+            <ContentCreatePage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
       <Route path="/library">
         <ProtectedRoute>
-          <ContentLibraryPage />
+          <FeatureGate feature="content_library">
+            <ContentLibraryPage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
@@ -148,19 +186,33 @@ function AppRoutes() {
 
       <Route path="/plans">
         <ProtectedRoute>
-          <PlansPage />
+          <FeatureGate feature="subscription_plans">
+            <PlansPage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
       <Route path="/publish">
         <ProtectedRoute>
-          <PublishPage />
+          <FeatureGate feature="publishing">
+            <PublishPage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
       <Route path="/posts">
         <ProtectedRoute>
-          <PostsPage />
+          <FeatureGate feature="publishing">
+            <PostsPage />
+          </FeatureGate>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/calendar">
+        <ProtectedRoute>
+          <FeatureGate feature="content_calendar">
+            <CalendarPage />
+          </FeatureGate>
         </ProtectedRoute>
       </Route>
 
@@ -185,6 +237,14 @@ function AppRoutes() {
         <AdminRoute>
           <AdminLayout>
             <AdminPlansPage />
+          </AdminLayout>
+        </AdminRoute>
+      </Route>
+
+      <Route path="/admin/feature-flags">
+        <AdminRoute>
+          <AdminLayout>
+            <AdminFeatureFlagsPage />
           </AdminLayout>
         </AdminRoute>
       </Route>

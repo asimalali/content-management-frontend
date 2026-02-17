@@ -3,20 +3,14 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDestinations, type ConnectedAccount, type Destination } from '@/features/integrations';
+import { getConnectionStatusClass } from '@/config/platform';
 
-// Platform icons
+// Platform icons (React components - kept local since they use JSX)
 const platformIcons: Record<string, React.ReactNode> = {
   Instagram: <Instagram className="h-4 w-4" />,
   X: <span className="text-sm font-bold">𝕏</span>,
   Facebook: <span className="text-sm font-bold">f</span>,
   TikTok: <span className="text-sm">♪</span>,
-};
-
-const statusColors: Record<string, string> = {
-  Connected: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  Expired: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  Revoked: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  Error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
 };
 
 export interface SelectedDestination {
@@ -101,7 +95,7 @@ function DestinationCard({
           </p>
           <p className="text-xs text-muted-foreground">@{account.platformUsername}</p>
         </div>
-        <Badge variant="secondary" className={statusColors[account.status]}>
+        <Badge variant="secondary" className={getConnectionStatusClass(account.status)}>
           متصل
         </Badge>
       </div>
@@ -134,4 +128,4 @@ function DestinationCard({
   );
 }
 
-export { platformIcons, statusColors };
+export { platformIcons };

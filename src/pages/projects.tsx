@@ -9,19 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProjects, useDeleteProject, type Project } from '@/features/projects';
 import { toast } from 'sonner';
+import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 function ProjectCard({
   project,
@@ -102,43 +95,6 @@ function ProjectCardSkeleton() {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="rounded-full bg-muted p-4 mb-4">
-        <FolderKanban className="h-8 w-8 text-muted-foreground" />
-      </div>
-      <h3 className="text-lg font-semibold mb-2">لا توجد مشاريع</h3>
-      <p className="text-muted-foreground mb-4 max-w-sm">
-        ابدأ بإنشاء مشروعك الأول لتنظيم وإدارة محتواك بشكل أفضل
-      </p>
-      <Button asChild>
-        <Link href="/projects/new">
-          <Plus className="ml-2 h-4 w-4" />
-          إنشاء مشروع
-        </Link>
-      </Button>
-    </div>
-  );
-}
-
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="rounded-full bg-destructive/10 p-4 mb-4">
-        <FolderKanban className="h-8 w-8 text-destructive" />
-      </div>
-      <h3 className="text-lg font-semibold mb-2">حدث خطأ</h3>
-      <p className="text-muted-foreground mb-4 max-w-sm">
-        تعذر تحميل المشاريع. يرجى المحاولة مرة أخرى.
-      </p>
-      <Button onClick={onRetry} variant="outline">
-        إعادة المحاولة
-      </Button>
-    </div>
-  );
-}
-
 export default function ProjectsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -166,20 +122,18 @@ export default function ProjectsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">المشاريع</h1>
-          <p className="text-muted-foreground">
-            إدارة مشاريعك وهوياتك التجارية
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/projects/new">
-            <Plus className="ml-2 h-4 w-4" />
-            مشروع جديد
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="المشاريع"
+        description="إدارة مشاريعك وهوياتك التجارية"
+        action={
+          <Button asChild>
+            <Link href="/projects/new">
+              <Plus className="ml-2 h-4 w-4" />
+              مشروع جديد
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Projects Grid */}
       {isLoading ? (
@@ -189,9 +143,20 @@ export default function ProjectsPage() {
           <ProjectCardSkeleton />
         </div>
       ) : isError ? (
-        <ErrorState onRetry={() => refetch()} />
+        <EmptyState
+          icon={FolderKanban}
+          title="حدث خطأ"
+          description="تعذر تحميل المشاريع. يرجى المحاولة مرة أخرى."
+          variant="error"
+          onRetry={() => refetch()}
+        />
       ) : !projects || projects.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          icon={FolderKanban}
+          title="لا توجد مشاريع"
+          description="ابدأ بإنشاء مشروعك الأول لتنظيم وإدارة محتواك بشكل أفضل"
+          action={{ label: 'إنشاء مشروع', href: '/projects/new', icon: Plus }}
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
@@ -206,29 +171,14 @@ export default function ProjectsPage() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد من الحذف؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف هذا المشروع وجميع المحتويات المرتبطة به. لا يمكن التراجع عن هذا الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteProject.isPending}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteProject.isPending}
-            >
-              {deleteProject.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin ml-2" />
-              ) : null}
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={() => setDeleteId(null)}
+        title="هل أنت متأكد من الحذف؟"
+        description="سيتم حذف هذا المشروع وجميع المحتويات المرتبطة به. لا يمكن التراجع عن هذا الإجراء."
+        onConfirm={handleDelete}
+        isPending={deleteProject.isPending}
+      />
     </div>
   );
 }

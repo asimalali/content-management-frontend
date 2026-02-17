@@ -6,6 +6,8 @@ import { useProjects } from '@/features/projects';
 import { useContentList } from '@/features/content';
 import { useCreditBalance } from '@/features/credits';
 import { BrandName } from '@/components/brand-name';
+import { formatDate } from '@/utils';
+import { RECENT_CONTENT_COUNT } from '@/config/constants';
 
 // Stats card component
 function StatsCard({
@@ -74,7 +76,7 @@ function RecentContentItem({
         <p className="text-xs text-muted-foreground">{templateName}</p>
       </div>
       <span className="text-xs text-muted-foreground">
-        {new Date(createdAt).toLocaleDateString('ar-SA')}
+        {formatDate(createdAt)}
       </span>
     </div>
   );
@@ -97,7 +99,7 @@ export default function DashboardPage() {
   };
 
   // Get recent content (last 5)
-  const recentContent = contents?.slice(0, 5) || [];
+  const recentContent = contents?.slice(0, RECENT_CONTENT_COUNT) || [];
 
   return (
     <div className="space-y-6">
@@ -220,7 +222,7 @@ export default function DashboardPage() {
                   createdAt={item.createdAt}
                 />
               ))}
-              {contents && contents.length > 5 && (
+              {contents && contents.length > RECENT_CONTENT_COUNT && (
                 <Link href="/library" className="block text-center text-sm text-primary hover:underline mt-4">
                   عرض كل المحتوى ({contents.length})
                 </Link>

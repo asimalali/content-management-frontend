@@ -17,6 +17,8 @@ import { useGenerateContent, type ContentTone, type ContentLength } from '@/feat
 import { useCreditBalance } from '@/features/credits';
 import { PublishNowSection } from '@/features/publishing';
 import { toast } from 'sonner';
+import { LOW_CREDIT_THRESHOLD } from '@/config/constants';
+import { copyToClipboard } from '@/utils';
 
 const toneOptions = ['professional', 'casual', 'friendly', 'formal'] as const;
 const lengthOptions = ['short', 'medium', 'long'] as const;
@@ -95,10 +97,8 @@ export default function ContentCreatePage() {
   };
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(generatedContent);
-    setCopied(true);
+    await copyToClipboard(generatedContent, setCopied);
     toast.success('تم نسخ المحتوى');
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const isLoading = isLoadingProjects || isLoadingTemplates;
@@ -130,7 +130,7 @@ export default function ContentCreatePage() {
       </div>
 
       {/* Low Credits Warning */}
-      {creditBalance && creditBalance.available < 5 && (
+      {creditBalance && creditBalance.available < LOW_CREDIT_THRESHOLD && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>

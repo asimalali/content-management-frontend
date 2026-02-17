@@ -27,6 +27,7 @@ import { useCreateCheckout } from '@/features/payments';
 import { useConfig } from '@/features/config';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/utils';
 
 // Plan icons based on slug
 const planIcons: Record<string, React.ElementType> = {
@@ -281,7 +282,7 @@ export default function PlansPage() {
               <div>
                 <p className="font-semibold text-lg">{subscription.planName}</p>
                 <p className="text-sm text-muted-foreground">
-                  تنتهي في {new Date(subscription.currentPeriodEnd).toLocaleDateString('ar-SA')}
+                  تنتهي في {formatDate(subscription.currentPeriodEnd)}
                 </p>
                 {creditBalance && (
                   <p className="text-sm text-muted-foreground mt-1">

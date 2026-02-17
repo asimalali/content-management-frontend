@@ -32,8 +32,8 @@ export default function OAuthCallbackPage() {
       return;
     }
 
-    // Get the backend tunnel URL for the redirect URI
-    const backendOAuthUrl = import.meta.env.VITE_BACKEND_OAUTH_URL || 'https://shaky-baths-tan.loca.lt';
+    // OAuth callback URL - must be configured via VITE_BACKEND_OAUTH_URL env variable
+    const backendOAuthUrl = import.meta.env.VITE_BACKEND_OAUTH_URL || window.location.origin;
     const redirectUri = `${backendOAuthUrl}/api/integrations/${platform.toLowerCase()}/callback`;
 
     // Call backend to exchange code for token (include state for PKCE verification)

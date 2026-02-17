@@ -36,6 +36,9 @@ import { useConnectedAccounts, useDestinations, type ConnectedAccount, type Dest
 import { usePublishInstant, type PublishDestination, type PublishResult } from '@/features/publishing';
 import { OptimizationDialog } from '@/features/content-optimization';
 import { toast } from 'sonner';
+import { POST_MAX_CHARS, CONTENT_PREVIEW_LENGTH } from '@/config/constants';
+import { truncateText } from '@/utils';
+import { getConnectionStatusClass, getConnectionStatusLabel } from '@/config/platform';
 
 // Platform icons
 const platformIcons: Record<string, React.ReactNode> = {
@@ -43,13 +46,6 @@ const platformIcons: Record<string, React.ReactNode> = {
   X: <span className="text-sm font-bold">𝕏</span>,
   Facebook: <span className="text-sm font-bold">f</span>,
   TikTok: <span className="text-sm">♪</span>,
-};
-
-const statusColors: Record<string, string> = {
-  Connected: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  Expired: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  Revoked: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  Error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
 };
 
 interface SelectedDestination {
@@ -321,7 +317,7 @@ export default function PublishPage() {
                         <SelectItem value="manual">كتابة يدوية</SelectItem>
                         {contentItems?.map((content) => (
                           <SelectItem key={content.id} value={content.id}>
-                            {content.templateName} - {content.content.substring(0, 30)}...
+                            {content.templateName} - {truncateText(content.content, CONTENT_PREVIEW_LENGTH)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -356,7 +352,7 @@ export default function PublishPage() {
                   className="resize-none"
                 />
                 <p className="text-xs text-muted-foreground text-left" dir="ltr">
-                  {postText.length} / 2200 character
+                  {postText.length} / {POST_MAX_CHARS} character
                 </p>
               </div>
 
@@ -456,10 +452,8 @@ export default function PublishPage() {
                             </p>
                           </div>
                         </div>
-                        <Badge variant="secondary" className={statusColors[account.status]}>
-                          {account.status === 'Expired' && 'منتهي'}
-                          {account.status === 'Revoked' && 'ملغى'}
-                          {account.status === 'Error' && 'خطأ'}
+                        <Badge variant="secondary" className={getConnectionStatusClass(account.status)}>
+                          {getConnectionStatusLabel(account.status)}
                         </Badge>
                       </div>
                     ))}
@@ -601,8 +595,8 @@ function DestinationCard({
           </p>
           <p className="text-xs text-muted-foreground">@{account.platformUsername}</p>
         </div>
-        <Badge variant="secondary" className={statusColors[account.status]}>
-          متصل
+        <Badge variant="secondary" className={getConnectionStatusClass(account.status)}>
+          {getConnectionStatusLabel(account.status)}
         </Badge>
       </div>
 

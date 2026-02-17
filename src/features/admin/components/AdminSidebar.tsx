@@ -5,6 +5,7 @@ import {
   CreditCard,
   Package,
   ArrowRight,
+  Flag,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -18,13 +19,52 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
+import { useFeatureFlag } from '@/features/config/hooks/use-feature-flag';
 
-const adminMenuItems = [
-  { title: 'لوحة التحكم', url: '/admin', icon: LayoutDashboard },
-  { title: 'المستخدمين', url: '/admin/users', icon: Users },
-  { title: 'الأرصدة', url: '/admin/credits', icon: CreditCard },
-  { title: 'الباقات', url: '/admin/plans', icon: Package },
+interface AdminMenuItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  featureFlag?: string;
+}
+
+const adminMenuItems: AdminMenuItem[] = [
+  { title: 'لوحة التحكم', url: '/admin', icon: LayoutDashboard, featureFlag: 'admin_panel' },
+  { title: 'المستخدمين', url: '/admin/users', icon: Users, featureFlag: 'admin_users' },
+  { title: 'الأرصدة', url: '/admin/credits', icon: CreditCard, featureFlag: 'admin_credits' },
+  { title: 'الباقات', url: '/admin/plans', icon: Package, featureFlag: 'admin_plans' },
+  { title: 'خصائص المنصة', url: '/admin/feature-flags', icon: Flag },
 ];
+
+function GatedAdminMenuItem({ item, isActive }: { item: AdminMenuItem; isActive: boolean }) {
+  const { isEnabled, isLoading } = useFeatureFlag(item.featureFlag ?? '');
+
+  if (!item.featureFlag) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+          <Link href={item.url}>
+            <item.icon className="h-4 w-4" />
+            <span>{item.title}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  if (isLoading || !isEnabled) return null;
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+        <Link href={item.url}>
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
 
 export function AdminSidebar() {
   const [location] = useLocation();
@@ -41,18 +81,11 @@ export function AdminSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {adminMenuItems.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location === item.url}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <GatedAdminMenuItem
+                  key={item.url}
+                  item={item}
+                  isActive={location === item.url}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

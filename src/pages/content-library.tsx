@@ -5,40 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useContentList, useDeleteContent, type ContentItem } from '@/features/content';
+import { useContentList, useDeleteContent, ContentDetailDialog, type ContentItem } from '@/features/content';
 import { toast } from 'sonner';
-
-const statusLabels: Record<string, string> = {
-  Draft: 'مسودة',
-  Final: 'نهائي',
-  Published: 'منشور',
-  Archived: 'مؤرشف',
-};
-
-const statusColors: Record<string, string> = {
-  Draft: 'secondary',
-  Final: 'default',
-  Published: 'outline',
-  Archived: 'destructive',
-};
+import { CONTENT_STATUS_CONFIG } from '@/config/platform';
+import { formatDate, copyToClipboard } from '@/utils';
+import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 function ContentCard({
   content,
@@ -55,10 +29,8 @@ function ContentCard({
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    await navigator.clipboard.writeText(content.content);
-    setCopied(true);
+    await copyToClipboard(content.content, setCopied);
     toast.success('تم نسخ المحتوى');
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -70,8 +42,8 @@ function ContentCard({
               <CardTitle className="text-base">{content.title}</CardTitle>
             )}
             <div className="flex items-center gap-2">
-              <Badge variant={statusColors[content.status] as "default" | "secondary" | "destructive" | "outline"}>
-                {statusLabels[content.status]}
+              <Badge variant={(CONTENT_STATUS_CONFIG[content.status]?.variant ?? 'secondary') as "default" | "secondary" | "destructive" | "outline"}>
+                {CONTENT_STATUS_CONFIG[content.status]?.label ?? content.status}
               </Badge>
               {content.templateName && (
                 <Badge variant="outline" className="text-xs">
@@ -121,7 +93,7 @@ function ContentCard({
           {content.content}
         </p>
         <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-          <span>{new Date(content.createdAt).toLocaleDateString('ar-SA')}</span>
+          <span>{formatDate(content.createdAt)}</span>
           <span>{content.creditsUsed} وحدة</span>
         </div>
       </CardContent>
@@ -141,37 +113,6 @@ function ContentCardSkeleton() {
         <Skeleton className="h-4 w-1/2" />
       </CardContent>
     </Card>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="rounded-full bg-muted p-4 mb-4">
-        <FileText className="h-8 w-8 text-muted-foreground" />
-      </div>
-      <h3 className="text-lg font-semibold mb-2">لا يوجد محتوى</h3>
-      <p className="text-muted-foreground mb-4 max-w-sm">
-        ابدأ بإنشاء محتوى جديد باستخدام الذكاء الاصطناعي
-      </p>
-    </div>
-  );
-}
-
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="rounded-full bg-destructive/10 p-4 mb-4">
-        <FileText className="h-8 w-8 text-destructive" />
-      </div>
-      <h3 className="text-lg font-semibold mb-2">حدث خطأ</h3>
-      <p className="text-muted-foreground mb-4 max-w-sm">
-        تعذر تحميل المحتوى. يرجى المحاولة مرة أخرى.
-      </p>
-      <Button onClick={onRetry} variant="outline">
-        إعادة المحاولة
-      </Button>
-    </div>
   );
 }
 
@@ -210,12 +151,10 @@ export default function ContentLibraryPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">مكتبة المحتوى</h1>
-        <p className="text-muted-foreground">
-          جميع المحتويات المُنشأة بالذكاء الاصطناعي
-        </p>
-      </div>
+      <PageHeader
+        title="مكتبة المحتوى"
+        description="جميع المحتويات المُنشأة بالذكاء الاصطناعي"
+      />
 
       {/* Search */}
       <div className="relative max-w-md">
@@ -236,9 +175,19 @@ export default function ContentLibraryPage() {
           <ContentCardSkeleton />
         </div>
       ) : isError ? (
-        <ErrorState onRetry={() => refetch()} />
+        <EmptyState
+          icon={FileText}
+          title="حدث خطأ"
+          description="تعذر تحميل المحتوى. يرجى المحاولة مرة أخرى."
+          variant="error"
+          onRetry={() => refetch()}
+        />
       ) : filteredContents.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          icon={FileText}
+          title="لا يوجد محتوى"
+          description="ابدأ بإنشاء محتوى جديد باستخدام الذكاء الاصطناعي"
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredContents.map((content) => (
@@ -253,50 +202,21 @@ export default function ContentLibraryPage() {
         </div>
       )}
 
-      {/* View Dialog */}
-      <Dialog open={!!viewContent} onOpenChange={() => setViewContent(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{viewContent?.title || 'عرض المحتوى'}</DialogTitle>
-            <DialogDescription>
-              <span className="flex items-center gap-2">
-                {viewContent?.templateName && (
-                  <Badge variant="outline">{viewContent.templateName}</Badge>
-                )}
-                <span>
-                  تم إنشاؤه في {viewContent && new Date(viewContent.createdAt).toLocaleDateString('ar-SA')}
-                </span>
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm max-h-96 overflow-auto">
-            {viewContent?.content}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* View Dialog with AI Features */}
+      <ContentDetailDialog
+        content={viewContent}
+        onClose={() => setViewContent(null)}
+      />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد من الحذف؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف هذا المحتوى نهائياً. لا يمكن التراجع عن هذا الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteContent.isPending}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteContent.isPending}
-            >
-              {deleteContent.isPending && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={() => setDeleteId(null)}
+        title="هل أنت متأكد من الحذف؟"
+        description="سيتم حذف هذا المحتوى نهائياً. لا يمكن التراجع عن هذا الإجراء."
+        onConfirm={handleDelete}
+        isPending={deleteContent.isPending}
+      />
     </div>
   );
 }

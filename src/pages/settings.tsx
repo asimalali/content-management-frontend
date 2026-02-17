@@ -7,48 +7,18 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { useAuth } from '@/features/auth';
 import { useCreditBalance } from '@/features/credits';
 import {
   useConnectedAccounts,
   useDisconnectAccount,
   useConnectPlatform,
-  type Platform,
   type ConnectedAccount,
 } from '@/features/integrations';
+import { PLATFORM_CONFIG, type PlatformKey, getConnectionStatusClass, getConnectionStatusLabel } from '@/config/platform';
+import { formatDate } from '@/utils';
 import { toast } from 'sonner';
-
-// Platform display info
-const platformInfo: Record<Platform, { name: string; icon: string }> = {
-  X: { name: 'X (تويتر)', icon: '𝕏' },
-  Facebook: { name: 'فيسبوك', icon: 'f' },
-  Instagram: { name: 'انستقرام', icon: '📷' },
-  TikTok: { name: 'تيك توك', icon: '♪' },
-};
-
-const statusColors: Record<string, string> = {
-  Connected: 'bg-green-100 text-green-800',
-  Expired: 'bg-yellow-100 text-yellow-800',
-  Revoked: 'bg-red-100 text-red-800',
-  Error: 'bg-red-100 text-red-800',
-};
-
-const statusLabels: Record<string, string> = {
-  Connected: 'متصل',
-  Expired: 'منتهي الصلاحية',
-  Revoked: 'ملغى',
-  Error: 'خطأ',
-};
 
 function ConnectedAccountCard({
   account,
@@ -59,7 +29,7 @@ function ConnectedAccountCard({
   onDisconnect: () => void;
   isDisconnecting: boolean;
 }) {
-  const platform = platformInfo[account.platform];
+  const platform = PLATFORM_CONFIG[account.platform as PlatformKey];
 
   return (
     <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
@@ -76,12 +46,12 @@ function ConnectedAccountCard({
         )}
         <div>
           <div className="flex items-center gap-2">
-            <p className="font-medium">{account.displayName || platform?.name}</p>
+            <p className="font-medium">{account.displayName || platform?.nameAr}</p>
             <Badge
               variant="secondary"
-              className={statusColors[account.status]}
+              className={getConnectionStatusClass(account.status)}
             >
-              {statusLabels[account.status]}
+              {getConnectionStatusLabel(account.status)}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">@{account.platformUsername}</p>
@@ -115,10 +85,9 @@ export default function SettingsPage() {
   const disconnectAccount = useDisconnectAccount();
   const connectPlatform = useConnectPlatform();
 
-  const handleConnect = async (platform: Platform) => {
-    // Use the HTTPS tunnel URL for OAuth callback (Facebook requires HTTPS)
-    // This should match what's configured in Facebook App settings
-    const backendOAuthUrl = import.meta.env.VITE_BACKEND_OAUTH_URL || 'https://shaky-baths-tan.loca.lt';
+  const handleConnect = async (platform: PlatformKey) => {
+    // OAuth callback URL - must be configured via VITE_BACKEND_OAUTH_URL env variable
+    const backendOAuthUrl = import.meta.env.VITE_BACKEND_OAUTH_URL || window.location.origin;
     const redirectUri = `${backendOAuthUrl}/api/integrations/${platform.toLowerCase()}/callback`;
 
     connectPlatform.mutate(
@@ -132,7 +101,7 @@ export default function SettingsPage() {
           window.location.href = response.authorizationUrl;
         },
         onError: () => {
-          toast.error(`فشل الاتصال بـ ${platformInfo[platform]?.name}`);
+          toast.error(`فشل الاتصال بـ ${PLATFORM_CONFIG[platform]?.nameAr}`);
         },
       }
     );
@@ -155,7 +124,7 @@ export default function SettingsPage() {
 
   // Get platforms that are not connected yet
   const connectedPlatforms = new Set(connectedAccounts?.map(a => a.platform) || []);
-  const availablePlatforms = (['X', 'Facebook', 'Instagram', 'TikTok'] as Platform[]).filter(
+  const availablePlatforms = (['X', 'Facebook', 'Instagram', 'TikTok'] as PlatformKey[]).filter(
     p => !connectedPlatforms.has(p)
   );
 
@@ -203,7 +172,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">تاريخ الانضمام</span>
-                <span>{user?.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-SA') : '-'}</span>
+                <span>{user?.createdAt ? formatDate(user.createdAt) : '-'}</span>
               </div>
             </div>
           </CardContent>
@@ -275,9 +244,9 @@ export default function SettingsPage() {
                         {connectPlatform.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin ml-2" />
                         ) : (
-                          <span className="ml-2">{platformInfo[platform]?.icon}</span>
+                          <span className="ml-2">{PLATFORM_CONFIG[platform]?.icon}</span>
                         )}
-                        {platformInfo[platform]?.name}
+                        {PLATFORM_CONFIG[platform]?.nameAr}
                       </Button>
                     ))}
                   </div>
@@ -333,27 +302,16 @@ export default function SettingsPage() {
       </div>
 
       {/* Disconnect Confirmation Dialog */}
-      <AlertDialog open={!!disconnectId} onOpenChange={() => setDisconnectId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد من إلغاء الربط؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم إلغاء ربط هذا الحساب ولن تتمكن من النشر عليه مباشرة. يمكنك إعادة ربطه لاحقاً.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={disconnectAccount.isPending}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDisconnect}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={disconnectAccount.isPending}
-            >
-              {disconnectAccount.isPending && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
-              إلغاء الربط
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!disconnectId}
+        onOpenChange={() => setDisconnectId(null)}
+        title="هل أنت متأكد من إلغاء الربط؟"
+        description="سيتم إلغاء ربط هذا الحساب ولن تتمكن من النشر عليه مباشرة. يمكنك إعادة ربطه لاحقاً."
+        onConfirm={handleDisconnect}
+        isPending={disconnectAccount.isPending}
+        confirmLabel="إلغاء الربط"
+        variant="destructive"
+      />
     </div>
   );
 }

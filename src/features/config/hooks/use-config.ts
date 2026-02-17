@@ -9,6 +9,6 @@ export function useConfig() {
   return useQuery({
     queryKey: configKeys.all,
     queryFn: configApi.getConfig,
-    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+    staleTime: 0, // Always fetch fresh config (feature flags need real-time updates)
   });
 }

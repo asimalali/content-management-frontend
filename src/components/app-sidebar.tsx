@@ -11,10 +11,13 @@ import {
   MessageSquare,
   Loader2,
   Shield,
+  CalendarDays,
 } from 'lucide-react';
+import { LOW_CREDIT_THRESHOLD } from '@/config/constants';
 import { BrandLogo } from '@/components/brand-logo';
 import { BrandName, BrandTagline } from '@/components/brand-name';
 import { useAuth } from '@/features/auth';
+import { useFeatureFlag } from '@/features/config/hooks/use-feature-flag';
 import {
   Sidebar,
   SidebarContent,
@@ -30,53 +33,57 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useCreditBalance } from '@/features/credits';
 
-const menuItems = [
-  {
-    title: 'لوحة التحكم',
-    url: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    title: 'المشاريع',
-    url: '/projects',
-    icon: FolderKanban,
-  },
-  {
-    title: 'القوالب',
-    url: '/templates',
-    icon: FileText,
-  },
-  {
-    title: 'إنشاء محتوى',
-    url: '/create',
-    icon: Sparkles,
-  },
-  {
-    title: 'مكتبة المحتوى',
-    url: '/library',
-    icon: Library,
-  },
-  {
-    title: 'نشر محتوى',
-    url: '/publish',
-    icon: Send,
-  },
-  {
-    title: 'المنشورات',
-    url: '/posts',
-    icon: MessageSquare,
-  },
-  {
-    title: 'الباقات',
-    url: '/plans',
-    icon: CreditCard,
-  },
-  {
-    title: 'الإعدادات',
-    url: '/settings',
-    icon: Settings,
-  },
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  featureFlag?: string;
+}
+
+const menuItems: MenuItem[] = [
+  { title: 'لوحة التحكم', url: '/dashboard', icon: LayoutDashboard },
+  { title: 'المشاريع', url: '/projects', icon: FolderKanban, featureFlag: 'projects' },
+  { title: 'القوالب', url: '/templates', icon: FileText, featureFlag: 'templates' },
+  { title: 'إنشاء محتوى', url: '/create', icon: Sparkles, featureFlag: 'content_generation' },
+  { title: 'مكتبة المحتوى', url: '/library', icon: Library, featureFlag: 'content_library' },
+  { title: 'تقويم المحتوى', url: '/calendar', icon: CalendarDays, featureFlag: 'content_calendar' },
+  { title: 'نشر محتوى', url: '/publish', icon: Send, featureFlag: 'publishing' },
+  { title: 'المنشورات', url: '/posts', icon: MessageSquare, featureFlag: 'publishing' },
+  { title: 'الباقات', url: '/plans', icon: CreditCard, featureFlag: 'subscription_plans' },
+  { title: 'الإعدادات', url: '/settings', icon: Settings },
 ];
+
+function GatedMenuItem({ item, isActive }: { item: MenuItem; isActive: boolean }) {
+  const { isEnabled, isLoading } = useFeatureFlag(item.featureFlag ?? '');
+
+  // Items without a feature flag are always shown
+  if (!item.featureFlag) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+          <Link href={item.url}>
+            <item.icon className="h-5 w-5" />
+            <span>{item.title}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  // Hide if loading or disabled
+  if (isLoading || !isEnabled) return null;
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+        <Link href={item.url}>
+          <item.icon className="h-5 w-5" />
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
 
 export function AppSidebar() {
   const [location] = useLocation();
@@ -109,18 +116,11 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location === item.url}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.url}>
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <GatedMenuItem
+                  key={item.url}
+                  item={item}
+                  isActive={location === item.url}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -169,7 +169,7 @@ export function AppSidebar() {
               </div>
             </div>
           )}
-          {!isLoadingCredits && remainingCredits <= 5 && totalAllocated > 0 && (
+          {!isLoadingCredits && remainingCredits <= LOW_CREDIT_THRESHOLD && totalAllocated > 0 && (
             <Link href="/plans" className="text-xs text-destructive mt-2 block hover:underline">
               رصيدك منخفض! قم بترقية باقتك
             </Link>
