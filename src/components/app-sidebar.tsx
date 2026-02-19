@@ -12,7 +12,9 @@ import {
   Loader2,
   Shield,
   CalendarDays,
+  Lock,
 } from 'lucide-react';
+import { ComingSoonBadge } from '@/components/coming-soon-badge';
 import { LOW_CREDIT_THRESHOLD } from '@/config/constants';
 import { BrandLogo } from '@/components/brand-logo';
 import { BrandName, BrandTagline } from '@/components/brand-name';
@@ -54,7 +56,7 @@ const menuItems: MenuItem[] = [
 ];
 
 function GatedMenuItem({ item, isActive }: { item: MenuItem; isActive: boolean }) {
-  const { isEnabled, isLoading } = useFeatureFlag(item.featureFlag ?? '');
+  const { isEnabled, isComingSoon, isLoading } = useFeatureFlag(item.featureFlag ?? '');
 
   // Items without a feature flag are always shown
   if (!item.featureFlag) {
@@ -70,16 +72,33 @@ function GatedMenuItem({ item, isActive }: { item: MenuItem; isActive: boolean }
     );
   }
 
-  // Hide if loading or disabled
-  if (isLoading || !isEnabled) return null;
+  // Hide if loading or fully disabled (not coming-soon)
+  if (isLoading || (!isEnabled && !isComingSoon)) return null;
 
+  // Show enabled item
+  if (isEnabled) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+          <Link href={item.url}>
+            <item.icon className="h-5 w-5" />
+            <span>{item.title}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  // Show locked / coming-soon item
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-        <Link href={item.url}>
-          <item.icon className="h-5 w-5" />
-          <span>{item.title}</span>
-        </Link>
+      <SidebarMenuButton
+        tooltip={item.title}
+        className="opacity-50 cursor-not-allowed pointer-events-none"
+      >
+        <Lock className="h-5 w-5" />
+        <span className="flex-1">{item.title}</span>
+        <ComingSoonBadge />
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

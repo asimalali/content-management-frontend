@@ -2,11 +2,12 @@ import { useFeatureFlag, usePlatformEnabled } from '@/features/config/hooks/use-
 
 /**
  * FeatureGate component for conditional rendering based on feature flags.
- * Hides content if the feature is not enabled.
+ * Supports three states: enabled, coming-soon (locked), and disabled (hidden).
  *
  * @param feature - The feature flag key
  * @param children - Content to show if feature is enabled
  * @param fallback - Content to show if feature is disabled (default: null)
+ * @param comingSoonFallback - Content to show if feature is coming soon (default: null)
  *
  * @example
  * <FeatureGate feature="projects">
@@ -14,7 +15,7 @@ import { useFeatureFlag, usePlatformEnabled } from '@/features/config/hooks/use-
  * </FeatureGate>
  *
  * @example
- * <FeatureGate feature="publishing" fallback={<div>Coming soon</div>}>
+ * <FeatureGate feature="publishing" comingSoonFallback={<LockedCard />}>
  *   <PublishPage />
  * </FeatureGate>
  */
@@ -22,34 +23,32 @@ export function FeatureGate({
   feature,
   children,
   fallback = null,
+  comingSoonFallback = null,
 }: {
   feature: string;
   children: React.ReactNode;
   fallback?: React.ReactNode;
+  comingSoonFallback?: React.ReactNode;
 }) {
-  const { isEnabled, isLoading } = useFeatureFlag(feature);
+  const { isEnabled, isComingSoon, isLoading } = useFeatureFlag(feature);
 
-  // During loading, return nothing (or skeleton if needed)
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return null;
 
-  // Show fallback if feature is disabled
-  if (!isEnabled) {
-    return <>{fallback}</>;
-  }
+  if (isEnabled) return <>{children}</>;
 
-  // Show children if feature is enabled
-  return <>{children}</>;
+  if (isComingSoon) return <>{comingSoonFallback}</>;
+
+  return <>{fallback}</>;
 }
 
 /**
  * PlatformGate component for conditional rendering based on platform availability.
- * Hides content if the platform is not enabled (e.g., Facebook, TikTok in V1).
+ * Supports three states: enabled, coming-soon (locked), and disabled (hidden).
  *
  * @param platform - The platform name (e.g., "X", "Instagram")
  * @param children - Content to show if platform is enabled
  * @param fallback - Content to show if platform is disabled (default: null)
+ * @param comingSoonFallback - Content to show if platform is coming soon (default: null)
  *
  * @example
  * <PlatformGate platform="X">
@@ -57,7 +56,7 @@ export function FeatureGate({
  * </PlatformGate>
  *
  * @example
- * <PlatformGate platform="Facebook" fallback={<div>Coming in V2</div>}>
+ * <PlatformGate platform="Facebook" comingSoonFallback={<LockedPlatformCard ... />}>
  *   <FacebookPublishingComponent />
  * </PlatformGate>
  */
@@ -65,23 +64,20 @@ export function PlatformGate({
   platform,
   children,
   fallback = null,
+  comingSoonFallback = null,
 }: {
   platform: string;
   children: React.ReactNode;
   fallback?: React.ReactNode;
+  comingSoonFallback?: React.ReactNode;
 }) {
-  const { isEnabled, isLoading } = usePlatformEnabled(platform);
+  const { isEnabled, isComingSoon, isLoading } = usePlatformEnabled(platform);
 
-  // During loading, return nothing
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return null;
 
-  // Show fallback if platform is disabled
-  if (!isEnabled) {
-    return <>{fallback}</>;
-  }
+  if (isEnabled) return <>{children}</>;
 
-  // Show children if platform is enabled
-  return <>{children}</>;
+  if (isComingSoon) return <>{comingSoonFallback}</>;
+
+  return <>{fallback}</>;
 }

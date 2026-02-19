@@ -157,7 +157,7 @@ export default function PostsPage() {
         open={!!deleteId}
         onOpenChange={() => setDeleteId(null)}
         title="هل أنت متأكد من حذف المنشور؟"
-        description="سيتم حذف المنشور نهائياً. هذا الإجراء لا يمكن التراجع عنه."
+        description="سيتم حذف المنشور من النظام نهائياً. تنبيه: لن يُحذف المنشور من منصات التواصل الاجتماعي التي تم النشر عليها مسبقاً."
         onConfirm={handleDelete}
         isPending={deletePost.isPending}
       />

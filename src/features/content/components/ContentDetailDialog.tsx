@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Hash, Repeat, Zap, Send } from 'lucide-react';
+import { Sparkles, Hash, Repeat, Zap, Send, Pencil, X, Check } from 'lucide-react';
 import { Link } from 'wouter';
 import {
   Dialog,
@@ -12,11 +12,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { OptimizationDialog, RepurposeDialog, HashtagAnalyzer, useCheckBrandVoice } from '@/features/content-optimization';
 import { BrandScoreDisplay } from '@/features/content-optimization/components/BrandScoreDisplay';
 import { CONTENT_STATUS_CONFIG } from '@/config/platform';
 import { formatDate } from '@/utils';
-import type { ContentItem } from '../types';
+import { useUpdateContent } from '../hooks/use-content';
+import type { ContentItem, ContentStatus } from '../types';
 
 interface ContentDetailDialogProps {
   content: ContentItem | null;
@@ -32,8 +41,34 @@ export function ContentDetailDialog({ content, onClose }: ContentDetailDialogPro
   // Store content data for child dialogs (needed when main dialog closes)
   const [savedContent, setSavedContent] = useState<ContentItem | null>(null);
 
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [editStatus, setEditStatus] = useState<ContentStatus>('Draft');
+  const updateContent = useUpdateContent();
+
   // Brand voice check
   const checkBrandVoice = useCheckBrandVoice();
+
+  const handleStartEdit = () => {
+    if (!displayContent) return;
+    setEditText(displayContent.content);
+    setEditStatus(displayContent.status);
+    setIsEditing(true);
+    setActiveTab('content');
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = () => {
+    if (!displayContent) return;
+    updateContent.mutate(
+      { contentId: displayContent.id, data: { content: editText, status: editStatus } },
+      { onSuccess: () => setIsEditing(false) }
+    );
+  };
 
   const handleCheckBrandVoice = () => {
     if (!displayContent) return;
@@ -66,7 +101,7 @@ export function ContentDetailDialog({ content, onClose }: ContentDetailDialogPro
 
   return (
     <>
-      <Dialog open={!!content} onOpenChange={onClose}>
+      <Dialog open={!!content} onOpenChange={() => { setIsEditing(false); onClose(); }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <div className="flex items-start justify-between">
@@ -82,17 +117,51 @@ export function ContentDetailDialog({ content, onClose }: ContentDetailDialogPro
                   </span>
                 </DialogDescription>
               </div>
-              <Button
-                variant="default"
-                size="sm"
-                asChild
-                className="shrink-0"
-              >
-                <Link href={`/publish?contentId=${displayContent.id}&projectId=${displayContent.projectId}`}>
-                  <Send className="h-4 w-4 ml-2" />
-                  نشر
-                </Link>
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                {isEditing ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                      disabled={updateContent.isPending}
+                    >
+                      <X className="h-4 w-4 ml-1" />
+                      إلغاء
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleSaveEdit}
+                      disabled={updateContent.isPending}
+                    >
+                      <Check className="h-4 w-4 ml-1" />
+                      {updateContent.isPending ? 'جارٍ الحفظ...' : 'حفظ'}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleStartEdit}
+                    >
+                      <Pencil className="h-4 w-4 ml-1" />
+                      تعديل
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      asChild
+                    >
+                      <Link href={`/publish?contentId=${displayContent.id}&projectId=${displayContent.projectId}`}>
+                        <Send className="h-4 w-4 ml-2" />
+                        نشر
+                      </Link>
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </DialogHeader>
 
@@ -145,9 +214,35 @@ export function ContentDetailDialog({ content, onClose }: ContentDetailDialogPro
             </TabsList>
 
             <TabsContent value="content" className="flex-1 overflow-auto mt-4">
-              <div className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm">
-                {displayContent.content}
-              </div>
+              {isEditing ? (
+                <div className="space-y-3">
+                  <Textarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    className="min-h-[200px] text-sm resize-y"
+                    dir="auto"
+                    disabled={updateContent.isPending}
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">الحالة:</span>
+                    <Select value={editStatus} onValueChange={(v) => setEditStatus(v as ContentStatus)} disabled={updateContent.isPending}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Draft">مسودة</SelectItem>
+                        <SelectItem value="Final">نهائي</SelectItem>
+                        <SelectItem value="Published">منشور</SelectItem>
+                        <SelectItem value="Archived">مؤرشف</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : (
+                <div className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm">
+                  {displayContent.content}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="brand-voice" className="flex-1 overflow-auto mt-4">

@@ -36,6 +36,7 @@ const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
 const AdminCreditsPage = lazy(() => import('@/pages/admin/credits'));
 const AdminPlansPage = lazy(() => import('@/pages/admin/plans'));
 const AdminFeatureFlagsPage = lazy(() => import('@/pages/admin/feature-flags'));
+const AdminFeatureDefinitionsPage = lazy(() => import('@/pages/admin/feature-definitions'));
 
 function PageSkeleton() {
   return (
@@ -245,6 +246,14 @@ function AppRoutes() {
         <AdminRoute>
           <AdminLayout>
             <AdminFeatureFlagsPage />
+          </AdminLayout>
+        </AdminRoute>
+      </Route>
+
+      <Route path="/admin/feature-definitions">
+        <AdminRoute>
+          <AdminLayout>
+            <AdminFeatureDefinitionsPage />
           </AdminLayout>
         </AdminRoute>
       </Route>

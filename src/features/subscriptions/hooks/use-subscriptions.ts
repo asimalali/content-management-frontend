@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { plansApi, subscriptionApi } from '../api/subscriptions-api';
 import { creditKeys } from '@/features/credits';
-import type { CreateSubscriptionRequest, UpgradeSubscriptionRequest } from '../types';
+import type { CreateSubscriptionRequest, UpgradeSubscriptionRequest, DowngradeSubscriptionRequest } from '../types';
 
 // Query keys
 export const planKeys = {
@@ -70,6 +70,18 @@ export function useUpgradeSubscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.current });
       queryClient.invalidateQueries({ queryKey: creditKeys.balance });
+    },
+  });
+}
+
+// Downgrade subscription
+export function useDowngradeSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: DowngradeSubscriptionRequest) => subscriptionApi.downgrade(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current });
     },
   });
 }

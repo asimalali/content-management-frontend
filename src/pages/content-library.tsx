@@ -6,7 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useContentList, useDeleteContent, ContentDetailDialog, type ContentItem } from '@/features/content';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useContentList, useDeleteContent, ContentDetailDialog, type ContentItem, type ContentStatus } from '@/features/content';
 import { toast } from 'sonner';
 import { CONTENT_STATUS_CONFIG } from '@/config/platform';
 import { formatDate, copyToClipboard } from '@/utils';
@@ -118,6 +125,7 @@ function ContentCardSkeleton() {
 
 export default function ContentLibraryPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ContentStatus | 'all'>('all');
   const [viewContent, setViewContent] = useState<ContentItem | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -127,11 +135,14 @@ export default function ContentLibraryPage() {
   // Delete mutation
   const deleteContent = useDeleteContent();
 
-  const filteredContents = (contents || []).filter((c) =>
-    c.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.templateName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredContents = (contents || []).filter((c) => {
+    const matchesSearch =
+      c.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.templateName?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const handleDelete = () => {
     if (!deleteId) return;
@@ -156,15 +167,29 @@ export default function ContentLibraryPage() {
         description="جميع المحتويات المُنشأة بالذكاء الاصطناعي"
       />
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="ابحث في المحتوى..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pr-9"
-        />
+      {/* Search and Filters */}
+      <div className="flex flex-wrap gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="ابحث في المحتوى..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pr-9"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ContentStatus | 'all')}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">جميع الحالات</SelectItem>
+            <SelectItem value="Draft">مسودة</SelectItem>
+            <SelectItem value="Final">نهائي</SelectItem>
+            <SelectItem value="Published">منشور</SelectItem>
+            <SelectItem value="Archived">مؤرشف</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Content Grid */}

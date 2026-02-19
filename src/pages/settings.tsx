@@ -8,8 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { LockedPlatformCard } from '@/components/coming-soon-badge';
 import { useAuth } from '@/features/auth';
 import { useCreditBalance } from '@/features/credits';
+import { useSubscription } from '@/features/subscriptions';
+import { useEnabledPlatforms } from '@/features/config/hooks/use-feature-flag';
 import {
   useConnectedAccounts,
   useDisconnectAccount,
@@ -80,6 +83,8 @@ export default function SettingsPage() {
   // Fetch data from APIs
   const { data: connectedAccounts, isLoading: isLoadingAccounts, refetch: refetchAccounts } = useConnectedAccounts();
   const { data: creditBalance, isLoading: isLoadingCredits } = useCreditBalance();
+  const { data: subscription, isLoading: isLoadingSubscription } = useSubscription();
+  const { platforms: enabledPlatforms, comingSoonPlatforms, isLoading: isLoadingPlatforms } = useEnabledPlatforms();
 
   // Mutations
   const disconnectAccount = useDisconnectAccount();
@@ -122,9 +127,12 @@ export default function SettingsPage() {
     });
   };
 
-  // Get platforms that are not connected yet
+  // Get platforms that are not connected yet, split by enabled vs coming-soon
   const connectedPlatforms = new Set(connectedAccounts?.map(a => a.platform) || []);
-  const availablePlatforms = (['X', 'Facebook', 'Instagram', 'TikTok'] as PlatformKey[]).filter(
+  const availablePlatforms = (enabledPlatforms as PlatformKey[]).filter(
+    p => !connectedPlatforms.has(p)
+  );
+  const lockedPlatforms = (comingSoonPlatforms as PlatformKey[]).filter(
     p => !connectedPlatforms.has(p)
   );
 
@@ -227,7 +235,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {availablePlatforms.length > 0 && (
+            {(availablePlatforms.length > 0 || (!isLoadingPlatforms && lockedPlatforms.length > 0)) && (
               <>
                 <Separator />
                 <div className="space-y-2">
@@ -249,6 +257,13 @@ export default function SettingsPage() {
                         {PLATFORM_CONFIG[platform]?.nameAr}
                       </Button>
                     ))}
+                    {!isLoadingPlatforms && lockedPlatforms.map((platform) => (
+                      <LockedPlatformCard
+                        key={platform}
+                        icon={PLATFORM_CONFIG[platform]?.icon ?? ''}
+                        name={PLATFORM_CONFIG[platform]?.nameAr ?? platform}
+                      />
+                    ))}
                   </div>
                 </div>
               </>
@@ -268,13 +283,24 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg bg-primary/10 border border-primary/20">
-              <div>
-                <p className="font-semibold">الباقة المجانية</p>
-                <p className="text-sm text-muted-foreground">50 وحدة محتوى شهرياً</p>
+            {isLoadingSubscription ? (
+              <Skeleton className="h-16 w-full rounded-lg" />
+            ) : (
+              <div className="flex items-center justify-between p-4 rounded-lg bg-primary/10 border border-primary/20">
+                <div>
+                  <p className="font-semibold">{subscription?.planName ?? 'لا يوجد اشتراك'}</p>
+                  {subscription?.pendingPlanName && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      سيتم التحويل إلى {subscription.pendingPlanName} بتاريخ{' '}
+                      {subscription.pendingPlanEffectiveAt
+                        ? formatDate(subscription.pendingPlanEffectiveAt)
+                        : ''}
+                    </p>
+                  )}
+                </div>
+                {subscription && <Badge>الباقة الحالية</Badge>}
               </div>
-              <Badge>الباقة الحالية</Badge>
-            </div>
+            )}
 
             {isLoadingCredits ? (
               <div className="space-y-2">

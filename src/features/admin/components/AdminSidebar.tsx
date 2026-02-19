@@ -6,6 +6,7 @@ import {
   Package,
   ArrowRight,
   Flag,
+  BookOpen,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -34,6 +35,7 @@ const adminMenuItems: AdminMenuItem[] = [
   { title: 'الأرصدة', url: '/admin/credits', icon: CreditCard, featureFlag: 'admin_credits' },
   { title: 'الباقات', url: '/admin/plans', icon: Package, featureFlag: 'admin_plans' },
   { title: 'خصائص المنصة', url: '/admin/feature-flags', icon: Flag },
+  { title: 'تعريفات الخصائص', url: '/admin/feature-definitions', icon: BookOpen },
 ];
 
 function GatedAdminMenuItem({ item, isActive }: { item: AdminMenuItem; isActive: boolean }) {

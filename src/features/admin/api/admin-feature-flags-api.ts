@@ -7,6 +7,7 @@ export interface FeatureFlag {
   description: string;
   category: string;
   isEnabled: boolean;
+  isComingSoon: boolean;
   flagType: string;
   platformSettings?: Record<string, boolean>;
   isSystemFlag: boolean;
@@ -30,6 +31,7 @@ export interface UpdateFeatureFlagRequest {
   displayName?: string;
   description?: string;
   isEnabled?: boolean;
+  isComingSoon?: boolean;
   platformSettings?: Record<string, boolean>;
   displayOrder?: number;
 }

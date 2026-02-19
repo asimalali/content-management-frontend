@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useFeatureFlags, useUpdateFeatureFlag } from '@/features/admin/hooks/use-feature-flags';
 import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import {
+  FeatureFlagStatusControl,
+  type FeatureFlagStatus,
+} from '@/components/feature-flag-status-control';
 
 export default function AdminFeatureFlagsPage() {
   const { data: flags, isLoading, error } = useFeatureFlags();
@@ -39,10 +42,22 @@ export default function AdminFeatureFlagsPage() {
 
   const categories = Object.keys(groupedFlags || {}).sort();
 
-  const handleToggle = async (flagKey: string, currentValue: boolean) => {
+  const getFeatureFlagState = (flag: {
+    isEnabled: boolean;
+    isComingSoon: boolean;
+  }): FeatureFlagStatus => {
+    if (flag.isEnabled) return 'enabled';
+    if (flag.isComingSoon) return 'comingSoon';
+    return 'hidden';
+  };
+
+  const handleStateChange = async (flagKey: string, newState: FeatureFlagStatus) => {
     await updateFlag.mutateAsync({
       flagKey,
-      data: { isEnabled: !currentValue },
+      data: {
+        isEnabled: newState === 'enabled',
+        isComingSoon: newState === 'comingSoon',
+      },
     });
   };
 
@@ -141,10 +156,10 @@ export default function AdminFeatureFlagsPage() {
                       )}
                   </div>
 
-                  <Switch
-                    checked={flag.isEnabled}
-                    onCheckedChange={() =>
-                      handleToggle(flag.flagKey, flag.isEnabled)
+                  <FeatureFlagStatusControl
+                    currentState={getFeatureFlagState(flag)}
+                    onChange={(newState) =>
+                      handleStateChange(flag.flagKey, newState)
                     }
                     disabled={updateFlag.isPending}
                   />

@@ -19,6 +19,7 @@ import {
   useSubscription,
   useCreateSubscription,
   useUpgradeSubscription,
+  useDowngradeSubscription,
   useCancelSubscription,
   type Plan,
 } from '@/features/subscriptions';
@@ -71,11 +72,13 @@ function PlanCardSkeleton() {
 function PlanCard({
   plan,
   currentPlanId,
+  isDowngradePlan,
   onSelect,
   isLoading,
 }: {
   plan: Plan;
   currentPlanId?: string;
+  isDowngradePlan?: boolean;
   onSelect: (plan: Plan) => void;
   isLoading: boolean;
 }) {
@@ -152,7 +155,7 @@ function PlanCard({
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin ml-2" />
             ) : null}
-            {currentPlanId ? 'الترقية' : 'اشترك الآن'}
+            {currentPlanId ? (isDowngradePlan ? 'التخفيض' : 'الترقية') : 'اشترك الآن'}
           </Button>
         )}
       </CardFooter>
@@ -173,11 +176,16 @@ export default function PlansPage() {
   // Mutations
   const createSubscription = useCreateSubscription();
   const upgradeSubscription = useUpgradeSubscription();
+  const downgradeSubscription = useDowngradeSubscription();
   const cancelSubscription = useCancelSubscription();
   const createCheckout = useCreateCheckout();
 
   const isLoading = isLoadingPlans || isLoadingSubscription;
-  const isMutating = createSubscription.isPending || upgradeSubscription.isPending || createCheckout.isPending;
+  const isMutating = createSubscription.isPending || upgradeSubscription.isPending || downgradeSubscription.isPending || createCheckout.isPending;
+
+  // Determine if the selected plan is a downgrade
+  const currentPlan = plans?.find((p) => p.id === subscription?.planId);
+  const isDowngrade = !!(selectedPlan && currentPlan && selectedPlan.priceMonthly < currentPlan.priceMonthly);
 
   const handleSelectPlan = (plan: Plan) => {
     setSelectedPlan(plan);
@@ -216,19 +224,35 @@ export default function PlansPage() {
 
     // For free plans OR when bypass is enabled, create subscription directly
     if (subscription) {
-      // Upgrade existing subscription
-      upgradeSubscription.mutate(
-        { newPlanId: selectedPlan.id },
-        {
-          onSuccess: () => {
-            toast.success(`تمت الترقية إلى ${selectedPlan.name} بنجاح`);
-            setSelectedPlan(null);
-          },
-          onError: () => {
-            toast.error('فشلت عملية الترقية');
-          },
-        }
-      );
+      if (isDowngrade) {
+        // Schedule downgrade at end of billing period
+        downgradeSubscription.mutate(
+          { newPlanId: selectedPlan.id },
+          {
+            onSuccess: () => {
+              toast.success(`سيتم التحويل إلى ${selectedPlan.name} في نهاية الفترة الحالية`);
+              setSelectedPlan(null);
+            },
+            onError: () => {
+              toast.error('فشلت عملية التخفيض');
+            },
+          }
+        );
+      } else {
+        // Upgrade existing subscription
+        upgradeSubscription.mutate(
+          { newPlanId: selectedPlan.id },
+          {
+            onSuccess: () => {
+              toast.success(`تمت الترقية إلى ${selectedPlan.name} بنجاح`);
+              setSelectedPlan(null);
+            },
+            onError: () => {
+              toast.error('فشلت عملية الترقية');
+            },
+          }
+        );
+      }
     } else {
       // Create new subscription (free plan or payment bypassed)
       createSubscription.mutate(
@@ -277,7 +301,7 @@ export default function PlansPage() {
           <CardHeader>
             <CardTitle className="text-lg">باقتك الحالية</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold text-lg">{subscription.planName}</p>
@@ -305,6 +329,15 @@ export default function PlansPage() {
                 )}
               </div>
             </div>
+            {subscription.pendingPlanName && (
+              <div className="rounded-md bg-yellow-50 border border-yellow-200 px-4 py-3 text-sm text-yellow-800">
+                سيتم التحويل إلى باقة <span className="font-semibold">{subscription.pendingPlanName}</span>{' '}
+                بتاريخ{' '}
+                {subscription.pendingPlanEffectiveAt
+                  ? formatDate(subscription.pendingPlanEffectiveAt)
+                  : 'نهاية الفترة الحالية'}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -323,6 +356,7 @@ export default function PlansPage() {
             key={plan.id}
             plan={plan}
             currentPlanId={subscription?.planId}
+            isDowngradePlan={!!(currentPlan && plan.priceMonthly < currentPlan.priceMonthly)}
             onSelect={handleSelectPlan}
             isLoading={isMutating && selectedPlan?.id === plan.id}
           />
@@ -340,23 +374,27 @@ export default function PlansPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {subscription ? 'تأكيد الترقية' : 'تأكيد الاشتراك'}
+              {!subscription ? 'تأكيد الاشتراك' : isDowngrade ? 'تأكيد التخفيض' : 'تأكيد الترقية'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {selectedPlan && (
                 <>
-                  {subscription
-                    ? `سيتم ترقية اشتراكك إلى باقة ${selectedPlan.name}`
-                    : `سيتم اشتراكك في باقة ${selectedPlan.name}`
+                  {!subscription
+                    ? `سيتم اشتراكك في باقة ${selectedPlan.name}`
+                    : isDowngrade
+                    ? `سيتم جدولة التحويل إلى باقة ${selectedPlan.name} في نهاية فترة الاشتراك الحالية (${formatDate(subscription.currentPeriodEnd)}). ستبقى باقتك الحالية نشطة حتى ذلك التاريخ.`
+                    : `سيتم ترقية اشتراكك إلى باقة ${selectedPlan.name} فوراً`
                   }
                   {selectedPlan.priceMonthly > 0 && (
                     <span className="block mt-2">
                       التكلفة: ${selectedPlan.priceMonthly}/شهر
                     </span>
                   )}
-                  <span className="block mt-1">
-                    ستحصل على {selectedPlan.creditsMonthly} وحدة محتوى شهرياً
-                  </span>
+                  {!isDowngrade && (
+                    <span className="block mt-1">
+                      ستحصل على {selectedPlan.creditsMonthly} وحدة محتوى شهرياً
+                    </span>
+                  )}
                 </>
               )}
             </AlertDialogDescription>

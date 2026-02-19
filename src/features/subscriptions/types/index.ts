@@ -26,6 +26,9 @@ export interface Subscription {
   status: SubscriptionStatus;
   currentPeriodStart: string;
   currentPeriodEnd: string;
+  pendingPlanId?: string;
+  pendingPlanName?: string;
+  pendingPlanEffectiveAt?: string;
 }
 
 export interface CreateSubscriptionRequest {
@@ -35,5 +38,9 @@ export interface CreateSubscriptionRequest {
 }
 
 export interface UpgradeSubscriptionRequest {
+  newPlanId: string;
+}
+
+export interface DowngradeSubscriptionRequest {
   newPlanId: string;
 }

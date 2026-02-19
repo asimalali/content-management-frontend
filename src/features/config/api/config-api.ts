@@ -5,6 +5,8 @@ export interface ClientConfig {
   allowFreeSubscriptions: boolean;
   features: Record<string, boolean>;
   enabledPlatforms: string[];
+  comingSoonFeatures: string[];
+  comingSoonPlatforms: string[];
 }
 
 export const configApi = {

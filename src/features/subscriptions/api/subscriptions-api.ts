@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import type { Plan, Subscription, CreateSubscriptionRequest, UpgradeSubscriptionRequest } from '../types';
+import type { Plan, Subscription, CreateSubscriptionRequest, UpgradeSubscriptionRequest, DowngradeSubscriptionRequest } from '../types';
 
 export const plansApi = {
   // Get all available plans
@@ -48,6 +48,12 @@ export const subscriptionApi = {
   // Upgrade subscription to a new plan
   upgrade: async (data: UpgradeSubscriptionRequest): Promise<Subscription> => {
     const response = await api.put<Subscription>('/subscription/upgrade', data);
+    return response.data;
+  },
+
+  // Downgrade subscription (scheduled for end of billing period)
+  downgrade: async (data: DowngradeSubscriptionRequest): Promise<Subscription> => {
+    const response = await api.put<Subscription>('/subscription/downgrade', data);
     return response.data;
   },
 

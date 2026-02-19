@@ -15,12 +15,14 @@ import { useConfig } from './use-config';
  */
 export function useFeatureFlag(flagKey: string): {
   isEnabled: boolean;
+  isComingSoon: boolean;
   isLoading: boolean;
 } {
   const { data: config, isLoading } = useConfig();
 
   return {
     isEnabled: config?.features?.[flagKey] ?? false,
+    isComingSoon: config?.comingSoonFeatures?.includes(flagKey) ?? false,
     isLoading,
   };
 }
@@ -40,12 +42,14 @@ export function useFeatureFlag(flagKey: string): {
  */
 export function usePlatformEnabled(platform: string): {
   isEnabled: boolean;
+  isComingSoon: boolean;
   isLoading: boolean;
 } {
   const { data: config, isLoading } = useConfig();
 
   return {
     isEnabled: config?.enabledPlatforms?.includes(platform) ?? false,
+    isComingSoon: config?.comingSoonPlatforms?.includes(platform) ?? false,
     isLoading,
   };
 }
@@ -67,6 +71,7 @@ export function useEnabledPlatforms() {
 
   return {
     platforms: config?.enabledPlatforms ?? [],
+    comingSoonPlatforms: config?.comingSoonPlatforms ?? [],
     isLoading,
   };
 }
