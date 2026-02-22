@@ -28,3 +28,19 @@ export interface PaymentMethod {
   brand?: string;
   isDefault: boolean;
 }
+
+export type PaymentStatus = 'Pending' | 'Succeeded' | 'Failed' | 'Refunded';
+export type PaymentType = 'Subscription' | 'OneTime' | 'Refund';
+
+export interface PaymentRecord {
+  id: string;
+  subscriptionId: string;
+  provider: string;
+  externalTransactionId?: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  type: PaymentType;
+  description?: string;
+  createdAt: string;
+}

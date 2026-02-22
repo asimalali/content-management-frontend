@@ -27,10 +27,47 @@ export interface GenerateContentRequest {
   language?: ContentLanguage;
   tone?: ContentTone;
   length?: ContentLength;
+  includeEmojis?: boolean;
 }
 
 export interface UpdateContentRequest {
   title?: string;
   content?: string;
   status?: ContentStatus;
+}
+
+export interface PagedContentResult {
+  items: ContentItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IMAGE GENERATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type ImageSize = '1024x1024' | '1792x1024' | '1024x1792';
+export type ImageQuality = 'standard' | 'hd';
+export type ImageStyle = 'natural' | 'vivid';
+
+export interface GenerateImageRequest {
+  projectId: string;
+  prompt: string;
+  size?: ImageSize;
+  quality?: ImageQuality;
+  style?: ImageStyle;
+}
+
+export interface ImageGenerationResponse {
+  mediaAsset: {
+    id: string;
+    fileName: string;
+    url: string;
+    mimeType: string;
+    sizeBytes: number;
+    createdAt: string;
+  };
+  revisedPrompt: string;
 }

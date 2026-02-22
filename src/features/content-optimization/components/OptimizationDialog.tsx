@@ -1,24 +1,12 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Check, Copy, AlertCircle } from 'lucide-react';
 import type { Platform } from '@/features/integrations';
+import { PLATFORM_LABELS, PLATFORM_BADGE_COLORS } from '@/config/platform';
+import { COPY_FEEDBACK_DURATION } from '@/config/constants';
 import { useOptimizeForMultiplePlatforms } from '../hooks/use-optimization';
 import type { OptimizationDialogProps, PlatformOptimizationResponse } from '../types';
 
 const PLATFORMS: Platform[] = ['X', 'Facebook', 'Instagram', 'TikTok'];
-
-const platformLabels: Record<Platform, string> = {
-  X: 'X (Twitter)',
-  Facebook: 'Facebook',
-  Instagram: 'Instagram',
-  TikTok: 'TikTok',
-};
-
-const platformColors: Record<Platform, string> = {
-  X: 'bg-slate-900 text-white',
-  Facebook: 'bg-blue-600 text-white',
-  Instagram: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 text-white',
-  TikTok: 'bg-black text-white',
-};
 
 export function OptimizationDialog({
   isOpen,
@@ -53,7 +41,7 @@ export function OptimizationDialog({
   const handleCopy = async (platform: Platform, text: string) => {
     await navigator.clipboard.writeText(text);
     setCopiedPlatform(platform);
-    setTimeout(() => setCopiedPlatform(null), 2000);
+    setTimeout(() => setCopiedPlatform(null), COPY_FEEDBACK_DURATION);
   };
 
   const handleUseOptimizations = () => {
@@ -134,7 +122,7 @@ export function OptimizationDialog({
                       : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  {platformLabels[platform]}
+                  {PLATFORM_LABELS[platform]}
                 </button>
               ))}
             </div>
@@ -193,8 +181,8 @@ export function OptimizationDialog({
                 <div key={optimization.platform} className="bg-gray-50 rounded-lg p-4 border">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${platformColors[optimization.platform]}`}>
-                        {platformLabels[optimization.platform]}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${PLATFORM_BADGE_COLORS[optimization.platform]}`}>
+                        {PLATFORM_LABELS[optimization.platform]}
                       </span>
                     </div>
                     <button

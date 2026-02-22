@@ -167,3 +167,67 @@ export interface AddFeatureRequest {
   isVisible?: boolean;
   sortOrder?: number;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAYMENT RECORDS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type PaymentStatus = 'Pending' | 'Succeeded' | 'Failed' | 'Refunded';
+export type PaymentType = 'Subscription' | 'OneTime' | 'Refund';
+
+export interface AdminPaymentRecord {
+  id: string;
+  subscriptionId: string;
+  userId: string;
+  provider: string;
+  externalTransactionId?: string;
+  externalCustomerId?: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  type: PaymentType;
+  description?: string;
+  createdAt: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AI PROVIDER MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface AiProviderConfiguration {
+  id: string;
+  providerKey: string;
+  displayName: string;
+  defaultModel: string;
+  availableModels: string[];
+  maxTokens: number;
+  temperature: number;
+  isEnabled: boolean;
+  isActive: boolean;
+  supportsImageGeneration: boolean;
+  isActiveImageProvider: boolean;
+  imageModel: string | null;
+  hasApiKey: boolean;
+  lastTestedAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface UpdateAiProviderRequest {
+  apiKey?: string;
+  defaultModel?: string;
+  availableModels?: string[];
+  maxTokens?: number;
+  temperature?: number;
+  isEnabled?: boolean;
+  imageModel?: string;
+}
+
+export interface AiProviderTestResult {
+  success: boolean;
+  providerKey: string;
+  model: string;
+  responsePreview?: string;
+  errorMessage?: string;
+  tokensUsed?: number;
+}

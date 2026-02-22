@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import type { ContentItem, GenerateContentRequest, UpdateContentRequest } from '../types';
+import type { ContentItem, GenerateContentRequest, GenerateImageRequest, ImageGenerationResponse, PagedContentResult, UpdateContentRequest } from '../types';
 
 export const contentApi = {
   // Generate content using AI
@@ -12,6 +12,14 @@ export const contentApi = {
   getAll: async (projectId?: string): Promise<ContentItem[]> => {
     const response = await api.get<ContentItem[]>('/content', {
       params: projectId ? { projectId } : undefined,
+    });
+    return response.data;
+  },
+
+  // Get content items for a project with pagination
+  getPaged: async (projectId: string, page = 1, pageSize = 20): Promise<PagedContentResult> => {
+    const response = await api.get<PagedContentResult>('/content/paged', {
+      params: { projectId, page, pageSize },
     });
     return response.data;
   },
@@ -31,5 +39,11 @@ export const contentApi = {
   // Delete content item
   delete: async (contentId: string): Promise<void> => {
     await api.delete(`/content/${contentId}`);
+  },
+
+  // Generate image using AI
+  generateImage: async (data: GenerateImageRequest): Promise<ImageGenerationResponse> => {
+    const response = await api.post<ImageGenerationResponse>('/content/generate-image', data);
+    return response.data;
   },
 };

@@ -6,6 +6,7 @@ import type { CreateCheckoutRequest } from '../types';
 export const paymentKeys = {
   gateways: ['payments', 'gateways'] as const,
   methods: ['payments', 'methods'] as const,
+  history: ['payments', 'history'] as const,
 };
 
 // Get available payment gateways
@@ -22,6 +23,14 @@ export function usePaymentMethods() {
   return useQuery({
     queryKey: paymentKeys.methods,
     queryFn: paymentsApi.getPaymentMethods,
+  });
+}
+
+// Get user's payment history
+export function usePaymentHistory() {
+  return useQuery({
+    queryKey: paymentKeys.history,
+    queryFn: paymentsApi.getPaymentHistory,
   });
 }
 

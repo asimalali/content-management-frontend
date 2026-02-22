@@ -13,6 +13,7 @@ import {
   Shield,
   CalendarDays,
   Lock,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { ComingSoonBadge } from '@/components/coming-soon-badge';
 import { LOW_CREDIT_THRESHOLD } from '@/config/constants';
@@ -47,6 +48,7 @@ const menuItems: MenuItem[] = [
   { title: 'المشاريع', url: '/projects', icon: FolderKanban, featureFlag: 'projects' },
   { title: 'القوالب', url: '/templates', icon: FileText, featureFlag: 'templates' },
   { title: 'إنشاء محتوى', url: '/create', icon: Sparkles, featureFlag: 'content_generation' },
+  { title: 'إنشاء صورة', url: '/generate-image', icon: ImageIcon, featureFlag: 'image_generation' },
   { title: 'مكتبة المحتوى', url: '/library', icon: Library, featureFlag: 'content_library' },
   { title: 'تقويم المحتوى', url: '/calendar', icon: CalendarDays, featureFlag: 'content_calendar' },
   { title: 'نشر محتوى', url: '/publish', icon: Send, featureFlag: 'publishing' },

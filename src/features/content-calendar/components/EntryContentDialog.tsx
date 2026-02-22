@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Copy, Check, Hash } from 'lucide-react';
 import type { CalendarEntry } from '../types';
 import { formatDateObject, copyToClipboard } from '@/utils';
+import { PLATFORM_LABELS_AR } from '@/config/platform';
 import { toast } from 'sonner';
 
 interface EntryContentDialogProps {
@@ -9,13 +10,6 @@ interface EntryContentDialogProps {
   onClose: () => void;
   entry: CalendarEntry | null;
 }
-
-const platformLabels: Record<string, string> = {
-  X: 'X',
-  Instagram: 'انستقرام',
-  Facebook: 'فيسبوك',
-  TikTok: 'تيك توك',
-};
 
 export function EntryContentDialog({ isOpen, onClose, entry }: EntryContentDialogProps) {
   const [copied, setCopied] = useState(false);
@@ -42,7 +36,7 @@ export function EntryContentDialog({ isOpen, onClose, entry }: EntryContentDialo
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs text-gray-500">{dateStr}</span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
-                {platformLabels[entry.targetPlatform] || entry.targetPlatform}
+                {PLATFORM_LABELS_AR[entry.targetPlatform] || entry.targetPlatform}
               </span>
             </div>
           </div>

@@ -29,14 +29,17 @@ const OAuthCallbackPage = lazy(() => import('@/pages/settings/oauth-callback'));
 const PublishPage = lazy(() => import('@/pages/publish'));
 const PostsPage = lazy(() => import('@/pages/posts'));
 const CalendarPage = lazy(() => import('@/pages/calendar'));
+const ImageGeneratePage = lazy(() => import('@/pages/image-generate'));
 
 // Lazy loaded admin pages
 const AdminDashboardPage = lazy(() => import('@/pages/admin'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
 const AdminCreditsPage = lazy(() => import('@/pages/admin/credits'));
 const AdminPlansPage = lazy(() => import('@/pages/admin/plans'));
+const AdminPaymentsPage = lazy(() => import('@/pages/admin/payments'));
 const AdminFeatureFlagsPage = lazy(() => import('@/pages/admin/feature-flags'));
 const AdminFeatureDefinitionsPage = lazy(() => import('@/pages/admin/feature-definitions'));
+const AdminAiProvidersPage = lazy(() => import('@/pages/admin/ai-providers'));
 
 function PageSkeleton() {
   return (
@@ -165,6 +168,14 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
 
+      <Route path="/generate-image">
+        <ProtectedRoute>
+          <FeatureGate feature="image_generation">
+            <ImageGeneratePage />
+          </FeatureGate>
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/library">
         <ProtectedRoute>
           <FeatureGate feature="content_library">
@@ -242,6 +253,14 @@ function AppRoutes() {
         </AdminRoute>
       </Route>
 
+      <Route path="/admin/payments">
+        <AdminRoute>
+          <AdminLayout>
+            <AdminPaymentsPage />
+          </AdminLayout>
+        </AdminRoute>
+      </Route>
+
       <Route path="/admin/feature-flags">
         <AdminRoute>
           <AdminLayout>
@@ -254,6 +273,14 @@ function AppRoutes() {
         <AdminRoute>
           <AdminLayout>
             <AdminFeatureDefinitionsPage />
+          </AdminLayout>
+        </AdminRoute>
+      </Route>
+
+      <Route path="/admin/ai-providers">
+        <AdminRoute>
+          <AdminLayout>
+            <AdminAiProvidersPage />
           </AdminLayout>
         </AdminRoute>
       </Route>

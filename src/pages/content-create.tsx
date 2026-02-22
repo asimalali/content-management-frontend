@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Sparkles, Copy, Check, AlertCircle } from 'lucide-react';
+import { Loader2, Sparkles, Copy, Check, AlertCircle, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useProjects } from '@/features/projects';
 import { useTemplates } from '@/features/templates';
 import { useGenerateContent, type ContentTone, type ContentLength } from '@/features/content';
@@ -30,6 +31,7 @@ const formSchema = z.object({
   tone: z.enum(toneOptions).optional(),
   length: z.enum(lengthOptions).optional(),
   language: z.enum(['en', 'ar', 'both']),
+  includeEmojis: z.boolean(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -56,6 +58,7 @@ export default function ContentCreatePage() {
       tone: 'professional',
       length: 'medium',
       language: 'ar',
+      includeEmojis: false,
     },
   });
 
@@ -77,11 +80,11 @@ export default function ContentCreatePage() {
         templateId: data.templateId,
         inputs: {
           topic: data.topic,
-          // Note: tone and length are now passed as top-level params, not in inputs
         },
         language: data.language,
         tone: (data.tone ?? 'professional') as ContentTone,
         length: (data.length ?? 'medium') as ContentLength,
+        includeEmojis: data.includeEmojis,
       },
       {
         onSuccess: (result) => {
@@ -297,6 +300,27 @@ export default function ContentCreatePage() {
                             <SelectItem value="both">كلاهما (عربي + English)</SelectItem>
                           </SelectContent>
                         </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="includeEmojis"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border p-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <Smile className="h-4 w-4 text-muted-foreground" />
+                          <FormLabel className="cursor-pointer text-sm font-normal">
+                            تضمين الإيموجي في المحتوى
+                          </FormLabel>
+                        </div>
                       </FormItem>
                     )}
                   />

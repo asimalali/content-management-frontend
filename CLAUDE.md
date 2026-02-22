@@ -364,6 +364,44 @@ import { Button } from '@/components/ui';
 
 ---
 
+## Before Committing (MANDATORY)
+
+> **CRITICAL: Every commit MUST pass these checks. No exceptions.**
+
+```bash
+cd content-management-frontend
+
+# 1. TypeScript type check (must have 0 errors)
+npx tsc --noEmit
+
+# 2. Production build (must succeed)
+npm run build
+
+# 3. Run tests (if applicable)
+npm run test
+
+# 4. Lint check (catch code quality issues)
+npm run lint
+```
+
+**Before pushing:**
+- [ ] `npx tsc --noEmit` passes with zero errors
+- [ ] `npm run build` succeeds (no build warnings)
+- [ ] All tests pass (`npm run test`)
+- [ ] No hardcoded URLs or API keys in code
+- [ ] No `any` types (use proper interfaces)
+- [ ] All shared components used (no UI duplication)
+- [ ] All constants used (no magic numbers/strings)
+- [ ] Feature flags tested (toggle on/off if added)
+- [ ] No console.log or debug code left in
+
+**If a check fails:**
+- Fix the code immediately — **don't commit with errors**
+- Understand the root cause, not just the error message
+- Test locally before pushing
+
+---
+
 ## Development Commands
 
 ```bash

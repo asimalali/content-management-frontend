@@ -16,16 +16,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useProjects } from '@/features/projects';
+import { PLATFORM_BADGE_COLORS_LIGHT } from '@/config/platform';
 import { useProjectIdeas, useRefreshIdeas, useGenerateFromIdea } from '../hooks/use-content-ideas';
 import type { ContentIdeaResponse } from '../types';
 import { toast } from 'sonner';
-
-const platformColors: Record<string, string> = {
-  X: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
-  Instagram: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
-  TikTok: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
-  Facebook: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-};
 
 function IdeaCard({ idea, onGenerate, isGenerating }: {
   idea: ContentIdeaResponse;
@@ -37,7 +31,7 @@ function IdeaCard({ idea, onGenerate, isGenerating }: {
       <CardContent className="p-4 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <h4 className="font-semibold text-sm leading-tight">{idea.topic}</h4>
-          <Badge variant="secondary" className={platformColors[idea.suggestedPlatform] || platformColors.X}>
+          <Badge variant="secondary" className={PLATFORM_BADGE_COLORS_LIGHT[idea.suggestedPlatform] || PLATFORM_BADGE_COLORS_LIGHT.X}>
             {idea.suggestedPlatform}
           </Badge>
         </div>

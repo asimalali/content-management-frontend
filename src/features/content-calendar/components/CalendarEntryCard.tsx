@@ -3,6 +3,7 @@ import { Sparkles, Loader2, Copy, Check, SkipForward, Eye, X } from 'lucide-reac
 import { useGenerateEntryContent, useUpdateEntry } from '../hooks/use-calendar';
 import type { CalendarEntry } from '../types';
 import { formatDateObject, copyToClipboard } from '@/utils';
+import { PLATFORM_LABELS_AR, CALENDAR_STATUS_CONFIG } from '@/config/platform';
 import { toast } from 'sonner';
 
 interface CalendarEntryCardProps {
@@ -10,26 +11,12 @@ interface CalendarEntryCardProps {
   onViewContent?: (entry: CalendarEntry) => void;
 }
 
-const platformLabels: Record<string, string> = {
-  X: 'X',
-  Instagram: 'انستقرام',
-  Facebook: 'فيسبوك',
-  TikTok: 'تيك توك',
-};
-
-const statusConfig: Record<string, { label: string; bg: string }> = {
-  Idea: { label: 'فكرة', bg: 'bg-gray-100 text-gray-700' },
-  ContentGenerated: { label: 'تم إنشاء المحتوى', bg: 'bg-green-100 text-green-700' },
-  Published: { label: 'تم النشر', bg: 'bg-blue-100 text-blue-700' },
-  Skipped: { label: 'تم التخطي', bg: 'bg-yellow-100 text-yellow-700' },
-};
-
 export function CalendarEntryCard({ entry, onViewContent }: CalendarEntryCardProps) {
   const [copied, setCopied] = useState(false);
   const generateMutation = useGenerateEntryContent();
   const updateMutation = useUpdateEntry();
 
-  const statusInfo = statusConfig[entry.status] || statusConfig.Idea;
+  const statusInfo = CALENDAR_STATUS_CONFIG[entry.status] || CALENDAR_STATUS_CONFIG.Idea;
   const date = new Date(entry.scheduledDate);
   const dayName = formatDateObject(date, { weekday: 'long' });
   const dateStr = formatDateObject(date, { month: 'short', day: 'numeric' });
@@ -76,7 +63,7 @@ export function CalendarEntryCard({ entry, onViewContent }: CalendarEntryCardPro
               {statusInfo.label}
             </span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
-              {platformLabels[entry.targetPlatform] || entry.targetPlatform}
+              {PLATFORM_LABELS_AR[entry.targetPlatform] || entry.targetPlatform}
             </span>
           </div>
           <h4 className="text-sm font-medium text-gray-900 mb-1">{entry.topicTitle}</h4>

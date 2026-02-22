@@ -2,24 +2,12 @@ import { useState } from 'react';
 import { Link } from 'wouter';
 import { X, Repeat2, Check, Copy, AlertCircle, Send } from 'lucide-react';
 import type { Platform } from '@/features/integrations';
+import { PLATFORM_LABELS, PLATFORM_BADGE_COLORS } from '@/config/platform';
+import { COPY_FEEDBACK_DURATION } from '@/config/constants';
 import { useRepurposeContent } from '../hooks/use-optimization';
 import type { RepurposeDialogProps, RepurposedVariant } from '../types';
 
 const PLATFORMS: Platform[] = ['X', 'Instagram'];
-
-const platformLabels: Record<Platform, string> = {
-  X: 'X (Twitter)',
-  Facebook: 'Facebook',
-  Instagram: 'Instagram',
-  TikTok: 'TikTok',
-};
-
-const platformColors: Record<Platform, string> = {
-  X: 'bg-slate-900 text-white',
-  Facebook: 'bg-blue-600 text-white',
-  Instagram: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 text-white',
-  TikTok: 'bg-black text-white',
-};
 
 export function RepurposeDialog({
   isOpen,
@@ -58,7 +46,7 @@ export function RepurposeDialog({
   const handleCopy = async (platform: Platform, text: string) => {
     await navigator.clipboard.writeText(text);
     setCopiedPlatform(platform);
-    setTimeout(() => setCopiedPlatform(null), 2000);
+    setTimeout(() => setCopiedPlatform(null), COPY_FEEDBACK_DURATION);
   };
 
   const togglePlatform = (platform: Platform) => {
@@ -126,7 +114,7 @@ export function RepurposeDialog({
                           : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300'
                       }`}
                     >
-                      {platformLabels[platform]}
+                      {PLATFORM_LABELS[platform]}
                     </button>
                   ))}
                 </div>
@@ -192,8 +180,8 @@ export function RepurposeDialog({
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs mr-2 ${platformColors[variant.platform]}`}>
-                      {platformLabels[variant.platform]}
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs mr-2 ${PLATFORM_BADGE_COLORS[variant.platform]}`}>
+                      {PLATFORM_LABELS[variant.platform]}
                     </span>
                   </button>
                 ))}

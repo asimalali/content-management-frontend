@@ -4,6 +4,7 @@ import type {
   CreateCheckoutRequest,
   CheckoutResponse,
   PaymentMethod,
+  PaymentRecord,
 } from '../types';
 
 export const paymentsApi = {
@@ -22,6 +23,12 @@ export const paymentsApi = {
   // Get user's saved payment methods
   getPaymentMethods: async (): Promise<PaymentMethod[]> => {
     const response = await api.get<PaymentMethod[]>('/payments/methods');
+    return response.data;
+  },
+
+  // Get user's payment history
+  getPaymentHistory: async (): Promise<PaymentRecord[]> => {
+    const response = await api.get<PaymentRecord[]>('/payments/history');
     return response.data;
   },
 };

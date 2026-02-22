@@ -7,6 +7,8 @@ import {
   ArrowRight,
   Flag,
   BookOpen,
+  Receipt,
+  Brain,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -34,8 +36,10 @@ const adminMenuItems: AdminMenuItem[] = [
   { title: 'المستخدمين', url: '/admin/users', icon: Users, featureFlag: 'admin_users' },
   { title: 'الأرصدة', url: '/admin/credits', icon: CreditCard, featureFlag: 'admin_credits' },
   { title: 'الباقات', url: '/admin/plans', icon: Package, featureFlag: 'admin_plans' },
+  { title: 'المدفوعات', url: '/admin/payments', icon: Receipt },
   { title: 'خصائص المنصة', url: '/admin/feature-flags', icon: Flag },
   { title: 'تعريفات الخصائص', url: '/admin/feature-definitions', icon: BookOpen },
+  { title: 'مزودي الذكاء الاصطناعي', url: '/admin/ai-providers', icon: Brain },
 ];
 
 function GatedAdminMenuItem({ item, isActive }: { item: AdminMenuItem; isActive: boolean }) {
