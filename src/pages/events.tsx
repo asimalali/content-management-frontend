@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   Globe,
   TrendingUp,
@@ -7,6 +7,7 @@ import {
   Loader2,
   ExternalLink,
   Users,
+  Lock,
 } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { EmptyState } from '@/components/empty-state';
@@ -32,6 +33,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEvents, useGenerateFromEvent } from '@/features/events';
 import { useTrends, useGenerateFromTrend } from '@/features/trends';
+import { useFeatureFlag } from '@/features/config/hooks/use-feature-flag';
 import { useProjects } from '@/features/projects';
 import { formatDate } from '@/utils';
 import { toast } from 'sonner';
@@ -95,6 +97,8 @@ export default function EventsPage() {
     item: GlobalEventResponse | MonthlyTrendResponse;
   } | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const { isEnabled: isMonthlyTrendsEnabled, isComingSoon: isMonthlyTrendsComingSoon } =
+    useFeatureFlag('monthly_trends');
 
   const { data: events, isLoading: eventsLoading } = useEvents({
     month: selectedMonth,
@@ -102,11 +106,14 @@ export default function EventsPage() {
     category: categoryFilter !== 'all' ? categoryFilter : undefined,
   });
 
-  const { data: trends, isLoading: trendsLoading } = useTrends({
-    month: selectedMonth,
-    year: selectedYear,
-    platform: platformFilter !== 'all' ? platformFilter : undefined,
-  });
+  const { data: trends, isLoading: trendsLoading } = useTrends(
+    {
+      month: selectedMonth,
+      year: selectedYear,
+      platform: platformFilter !== 'all' ? platformFilter : undefined,
+    },
+    { enabled: isMonthlyTrendsEnabled }
+  );
 
   const { data: projects } = useProjects();
   const generateFromEvent = useGenerateFromEvent();
@@ -150,10 +157,16 @@ export default function EventsPage() {
             <Globe className="h-4 w-4" />
             المناسبات
           </TabsTrigger>
-          <TabsTrigger value="trends" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            التوجهات
-          </TabsTrigger>
+          {(isMonthlyTrendsEnabled || isMonthlyTrendsComingSoon) && (
+            <TabsTrigger value="trends" className="gap-2">
+              {isMonthlyTrendsComingSoon ? (
+                <Lock className="h-4 w-4" />
+              ) : (
+                <TrendingUp className="h-4 w-4" />
+              )}
+              {isMonthlyTrendsComingSoon ? 'التوجهات (قريباً)' : 'التوجهات'}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* ─── Events Tab ─── */}
@@ -253,113 +266,125 @@ export default function EventsPage() {
         </TabsContent>
 
         {/* ─── Trends Tab ─── */}
-        <TabsContent value="trends" className="space-y-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Select
-              value={String(selectedMonth)}
-              onValueChange={(v) => setSelectedMonth(Number(v))}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {(isMonthlyTrendsEnabled || isMonthlyTrendsComingSoon) && (
+          <TabsContent value="trends" className="space-y-4">
+            {isMonthlyTrendsComingSoon && !isMonthlyTrendsEnabled ? (
+              <EmptyState
+                icon={Lock}
+                title="ميزة التوجهات قريباً"
+                description="هذه الميزة متاحة للعرض فقط حالياً وسيتم تفعيلها قريباً."
+              />
+            ) : (
+              <>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Select
+                    value={String(selectedMonth)}
+                    onValueChange={(v) => setSelectedMonth(Number(v))}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTHS.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-            <Select value={platformFilter} onValueChange={setPlatformFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="المنصة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع المنصات</SelectItem>
-                {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="المنصة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">جميع المنصات</SelectItem>
+                      {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-            <Badge variant="secondary">{trends?.length ?? 0} توجه</Badge>
-          </div>
+                  <Badge variant="secondary">{trends?.length ?? 0} توجه</Badge>
+                </div>
 
-          {trendsLoading ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-48 rounded-xl" />
-              ))}
-            </div>
-          ) : !trends?.length ? (
-            <EmptyState
-              icon={TrendingUp}
-              title="لا توجد توجهات"
-              description="لا توجد توجهات لهذا الشهر. سيتم إضافتها من قبل الإدارة."
-            />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {trends.map((trend) => (
-                <Card key={trend.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-base leading-snug">
-                        {trend.titleAr}
-                      </CardTitle>
-                      <Badge variant="outline">
-                        {PLATFORM_LABELS[trend.platform] ?? trend.platform}
-                      </Badge>
-                    </div>
-                    <CardDescription className="text-xs">
-                      {trend.title}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {trend.descriptionAr}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="secondary" className="text-xs">
-                        {trend.contentType}
-                      </Badge>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {trend.usageCount} استخدام
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      {trend.sourceUrl && (
-                        <a
-                          href={trend.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary flex items-center gap-1 hover:underline"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          المصدر
-                        </a>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1 mr-auto"
-                        onClick={() =>
-                          setGenerateDialog({ type: 'trend', item: trend })
-                        }
-                      >
-                        <Sparkles className="h-3 w-3" />
-                        إنشاء محتوى
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+                {trendsLoading ? (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Skeleton key={i} className="h-48 rounded-xl" />
+                    ))}
+                  </div>
+                ) : !trends?.length ? (
+                  <EmptyState
+                    icon={TrendingUp}
+                    title="لا توجد توجهات"
+                    description="لا توجد توجهات لهذا الشهر. سيتم إضافتها من قبل الإدارة."
+                  />
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {trends.map((trend) => (
+                      <Card key={trend.id} className="hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <CardTitle className="text-base leading-snug">
+                              {trend.titleAr}
+                            </CardTitle>
+                            <Badge variant="outline">
+                              {PLATFORM_LABELS[trend.platform] ?? trend.platform}
+                            </Badge>
+                          </div>
+                          <CardDescription className="text-xs">
+                            {trend.title}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {trend.descriptionAr}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Badge variant="secondary" className="text-xs">
+                              {trend.contentType}
+                            </Badge>
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              {trend.usageCount} استخدام
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            {trend.sourceUrl && (
+                              <a
+                                href={trend.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary flex items-center gap-1 hover:underline"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                المصدر
+                              </a>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1 mr-auto"
+                              onClick={() =>
+                                setGenerateDialog({ type: 'trend', item: trend })
+                              }
+                            >
+                              <Sparkles className="h-3 w-3" />
+                              إنشاء محتوى
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* ─── Generate Content Dialog ─── */}

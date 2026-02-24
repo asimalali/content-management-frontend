@@ -17,10 +17,14 @@ export const trendKeys = {
 
 // ─── User Hooks ───
 
-export function useTrends(params?: { month?: number; year?: number; platform?: string }) {
+export function useTrends(
+  params?: { month?: number; year?: number; platform?: string },
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: trendKeys.list(params),
     queryFn: () => trendsApi.getAll(params).then((r) => r.data),
+    enabled: options?.enabled ?? true,
   });
 }
 
