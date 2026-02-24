@@ -658,7 +658,7 @@ Follow this 10-step checklist:
 
 ---
 
-### 1. NO HARDCODED VALUES
+### 1. NO HARDCODED VALUES ⚠️ CRITICAL
 
 Never hardcode magic numbers, strings, or configuration values. Always use shared constants.
 
@@ -690,7 +690,7 @@ const maxLength = X_MAX_LENGTH;
 
 ---
 
-### 2. USE SHARED UTILITIES — NEVER DUPLICATE LOGIC
+### 2. USE SHARED UTILITIES — NEVER DUPLICATE LOGIC ⚠️ CRITICAL
 
 Always use existing utilities instead of writing inline logic.
 
@@ -722,7 +722,7 @@ truncateText(text, POST_PREVIEW_LENGTH)
 
 ---
 
-### 3. USE SHARED COMPONENTS — NEVER COPY-PASTE UI PATTERNS
+### 3. USE SHARED COMPONENTS — NEVER COPY-PASTE UI PATTERNS ⚠️ CRITICAL
 
 Use existing shared components instead of recreating common UI patterns.
 
@@ -865,7 +865,7 @@ import NewPage from '@/pages/new-page'; // WRONG
 
 ---
 
-### 8. NO `any` TYPES
+### 8. NO `any` TYPES ⚠️ CRITICAL
 
 Never use `any` type. Use proper interfaces, `unknown`, or specific types.
 
@@ -888,7 +888,7 @@ function handleChange(event: React.ChangeEvent<HTMLInputElement>) { ... }
 
 ---
 
-### 9. NO HARDCODED URLS OR SECRETS
+### 9. NO HARDCODED URLS OR SECRETS ⚠️ CRITICAL
 
 Never hardcode URLs, API keys, or secrets. Use environment variables.
 

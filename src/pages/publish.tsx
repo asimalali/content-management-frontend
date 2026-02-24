@@ -8,6 +8,8 @@ import {
   Instagram,
   ArrowLeft,
   Sparkles,
+  Clock,
+  CalendarClock,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,12 +35,20 @@ import {
 import { useProjects } from '@/features/projects';
 import { useContentList } from '@/features/content';
 import { useConnectedAccounts, useDestinations, type ConnectedAccount, type Destination } from '@/features/integrations';
-import { usePublishInstant, type PublishDestination, type PublishResult } from '@/features/publishing';
+import {
+  usePublishInstant,
+  useSchedulePost,
+  ScheduledPostsList,
+  type PublishDestination,
+  type PublishResult,
+} from '@/features/publishing';
 import { OptimizationDialog } from '@/features/content-optimization';
 import { toast } from 'sonner';
 import { POST_MAX_CHARS, CONTENT_PREVIEW_LENGTH } from '@/config/constants';
 import { truncateText } from '@/utils';
 import { getConnectionStatusClass, getConnectionStatusLabel } from '@/config/platform';
+
+type PublishMode = 'instant' | 'schedule';
 
 // Platform icons
 const platformIcons: Record<string, React.ReactNode> = {
@@ -73,13 +83,19 @@ export default function PublishPage() {
   const [contentInitialized, setContentInitialized] = useState(false);
   const [showOptimizationDialog, setShowOptimizationDialog] = useState(false);
 
+  // Scheduling state
+  const [publishMode, setPublishMode] = useState<PublishMode>('instant');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
+
   // Fetch data
   const { data: projects, isLoading: isLoadingProjects } = useProjects();
   const { data: contentItems, isLoading: isLoadingContent } = useContentList(selectedProjectId || undefined);
   const { data: connectedAccounts, isLoading: isLoadingAccounts } = useConnectedAccounts();
 
-  // Publish mutation
+  // Mutations
   const publishInstant = usePublishInstant();
+  const schedulePost = useSchedulePost();
 
   // Initialize content from URL params once content items are loaded
   useEffect(() => {
@@ -172,7 +188,7 @@ export default function PublishPage() {
     );
   };
 
-  // Handle publish
+  // Handle publish or schedule
   const handlePublish = () => {
     if (!selectedProjectId) {
       toast.error('يرجى اختيار المشروع');
@@ -191,6 +207,40 @@ export default function PublishPage() {
       connectedAccountId: d.accountId,
       destinationId: d.destinationId,
     }));
+
+    if (publishMode === 'schedule') {
+      if (!scheduledDate || !scheduledTime) {
+        toast.error('يرجى تحديد تاريخ ووقت الجدولة');
+        return;
+      }
+
+      const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
+
+      schedulePost.mutate(
+        {
+          projectId: selectedProjectId,
+          contentItemId: selectedContentId || undefined,
+          postText,
+          hashtags: hashtags.length > 0 ? hashtags : undefined,
+          destinations,
+          scheduledAt,
+        },
+        {
+          onSuccess: () => {
+            toast.success('تم جدولة المنشور بنجاح');
+            setPostText('');
+            setHashtags([]);
+            setSelectedDestinations([]);
+            setScheduledDate('');
+            setScheduledTime('');
+          },
+          onError: () => {
+            toast.error('فشل جدولة المنشور');
+          },
+        }
+      );
+      return;
+    }
 
     publishInstant.mutate(
       {
@@ -463,22 +513,79 @@ export default function PublishPage() {
             </CardContent>
           </Card>
 
-          {/* Publish Button */}
+          {/* Publish Mode Toggle + Scheduling */}
+          <Card>
+            <CardHeader>
+              <CardTitle>طريقة النشر</CardTitle>
+              <CardDescription>اختر النشر الفوري أو الجدولة لوقت لاحق</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Button
+                  variant={publishMode === 'instant' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setPublishMode('instant')}
+                >
+                  <Send className="h-4 w-4 ml-2" />
+                  نشر فوري
+                </Button>
+                <Button
+                  variant={publishMode === 'schedule' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setPublishMode('schedule')}
+                >
+                  <CalendarClock className="h-4 w-4 ml-2" />
+                  جدولة
+                </Button>
+              </div>
+
+              {publishMode === 'schedule' && (
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="space-y-2">
+                    <Label>التاريخ</Label>
+                    <Input
+                      type="date"
+                      value={scheduledDate}
+                      onChange={(e) => setScheduledDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>الوقت</Label>
+                    <Input
+                      type="time"
+                      value={scheduledTime}
+                      onChange={(e) => setScheduledTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Publish / Schedule Button */}
           <Button
             className="w-full"
             size="lg"
             onClick={handlePublish}
             disabled={
               publishInstant.isPending ||
+              schedulePost.isPending ||
               !selectedProjectId ||
               !postText.trim() ||
-              selectedDestinations.length === 0
+              selectedDestinations.length === 0 ||
+              (publishMode === 'schedule' && (!scheduledDate || !scheduledTime))
             }
           >
-            {publishInstant.isPending ? (
+            {publishInstant.isPending || schedulePost.isPending ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin ml-2" />
-                جاري النشر...
+                {publishMode === 'schedule' ? 'جاري الجدولة...' : 'جاري النشر...'}
+              </>
+            ) : publishMode === 'schedule' ? (
+              <>
+                <Clock className="h-5 w-5 ml-2" />
+                جدولة المنشور ({selectedDestinations.length} وجهة)
               </>
             ) : (
               <>
@@ -508,7 +615,11 @@ export default function PublishPage() {
                       <p className="font-semibold text-sm">
                         {selectedDestinations[0]?.accountName || 'حسابك'}
                       </p>
-                      <p className="text-xs text-muted-foreground">الآن</p>
+                      <p className="text-xs text-muted-foreground">
+                        {publishMode === 'schedule' && scheduledDate && scheduledTime
+                          ? `${scheduledDate} ${scheduledTime}`
+                          : 'الآن'}
+                      </p>
                     </div>
                   </div>
 
@@ -547,6 +658,16 @@ export default function PublishPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Scheduled Posts Section */}
+      <Separator />
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <CalendarClock className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">المنشورات المجدولة</h2>
+        </div>
+        <ScheduledPostsList projectId={selectedProjectId || undefined} />
       </div>
 
       {/* Optimization Dialog */}

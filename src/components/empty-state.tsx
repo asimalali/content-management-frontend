@@ -7,7 +7,8 @@ interface EmptyStateProps {
   description: string;
   action?: {
     label: string;
-    href: string;
+    href?: string;
+    onClick?: () => void;
     icon?: React.ElementType;
   };
   variant?: 'default' | 'error';
@@ -32,12 +33,18 @@ export function EmptyState({
       </div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <p className="text-muted-foreground mb-4 max-w-sm">{description}</p>
-      {action && (
+      {action && action.href && (
         <Button asChild>
           <Link href={action.href}>
             {action.icon && <action.icon className="ml-2 h-4 w-4" />}
             {action.label}
           </Link>
+        </Button>
+      )}
+      {action && action.onClick && !action.href && (
+        <Button onClick={action.onClick}>
+          {action.icon && <action.icon className="ml-2 h-4 w-4" />}
+          {action.label}
         </Button>
       )}
       {onRetry && (

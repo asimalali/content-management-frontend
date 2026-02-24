@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import type { ContentItem, GenerateContentRequest, GenerateImageRequest, ImageGenerationResponse, PagedContentResult, UpdateContentRequest } from '../types';
+import type { ContentItem, EditImageRequest, GenerateContentRequest, GenerateImageRequest, ImageEditingResponse, ImageGenerationResponse, PagedContentResult, UpdateContentRequest } from '../types';
 
 export const contentApi = {
   // Generate content using AI
@@ -44,6 +44,18 @@ export const contentApi = {
   // Generate image using AI
   generateImage: async (data: GenerateImageRequest): Promise<ImageGenerationResponse> => {
     const response = await api.post<ImageGenerationResponse>('/content/generate-image', data);
+    return response.data;
+  },
+
+  // Edit an existing image using AI (multipart/form-data)
+  editImage: async (data: EditImageRequest): Promise<ImageEditingResponse> => {
+    const formData = new FormData();
+    formData.append('projectId', data.projectId);
+    formData.append('prompt', data.prompt);
+    formData.append('image', data.image);
+    const response = await api.post<ImageEditingResponse>('/content/edit-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 };

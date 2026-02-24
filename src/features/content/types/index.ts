@@ -71,3 +71,25 @@ export interface ImageGenerationResponse {
   };
   revisedPrompt: string;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IMAGE EDITING
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface EditImageRequest {
+  projectId: string;
+  prompt: string;
+  image: File;
+}
+
+export interface ImageEditingResponse {
+  mediaAsset: {
+    id: string;
+    fileName: string;
+    url: string;
+    mimeType: string;
+    sizeBytes: number;
+    createdAt: string;
+  };
+  revisedPrompt: string;
+}

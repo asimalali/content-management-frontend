@@ -30,6 +30,10 @@ const PublishPage = lazy(() => import('@/pages/publish'));
 const PostsPage = lazy(() => import('@/pages/posts'));
 const CalendarPage = lazy(() => import('@/pages/calendar'));
 const ImageGeneratePage = lazy(() => import('@/pages/image-generate'));
+const ImageEditPage = lazy(() => import('@/pages/image-edit'));
+const EventsPage = lazy(() => import('@/pages/events'));
+const ProductsPage = lazy(() => import('@/pages/products'));
+const BioGeneratorPage = lazy(() => import('@/pages/bio-generator'));
 
 // Lazy loaded admin pages
 const AdminDashboardPage = lazy(() => import('@/pages/admin'));
@@ -40,6 +44,8 @@ const AdminPaymentsPage = lazy(() => import('@/pages/admin/payments'));
 const AdminFeatureFlagsPage = lazy(() => import('@/pages/admin/feature-flags'));
 const AdminFeatureDefinitionsPage = lazy(() => import('@/pages/admin/feature-definitions'));
 const AdminAiProvidersPage = lazy(() => import('@/pages/admin/ai-providers'));
+const AdminEventsPage = lazy(() => import('@/pages/admin/events'));
+const AdminTrendsPage = lazy(() => import('@/pages/admin/trends'));
 
 function PageSkeleton() {
   return (
@@ -176,6 +182,14 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
 
+      <Route path="/edit-image">
+        <ProtectedRoute>
+          <FeatureGate feature="image_editing">
+            <ImageEditPage />
+          </FeatureGate>
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/library">
         <ProtectedRoute>
           <FeatureGate feature="content_library">
@@ -224,6 +238,30 @@ function AppRoutes() {
         <ProtectedRoute>
           <FeatureGate feature="content_calendar">
             <CalendarPage />
+          </FeatureGate>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/events">
+        <ProtectedRoute>
+          <FeatureGate feature="global_events">
+            <EventsPage />
+          </FeatureGate>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/products">
+        <ProtectedRoute>
+          <FeatureGate feature="product_catalog">
+            <ProductsPage />
+          </FeatureGate>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/bio-generator">
+        <ProtectedRoute>
+          <FeatureGate feature="bio_generator">
+            <BioGeneratorPage />
           </FeatureGate>
         </ProtectedRoute>
       </Route>
@@ -281,6 +319,22 @@ function AppRoutes() {
         <AdminRoute>
           <AdminLayout>
             <AdminAiProvidersPage />
+          </AdminLayout>
+        </AdminRoute>
+      </Route>
+
+      <Route path="/admin/events">
+        <AdminRoute>
+          <AdminLayout>
+            <AdminEventsPage />
+          </AdminLayout>
+        </AdminRoute>
+      </Route>
+
+      <Route path="/admin/trends">
+        <AdminRoute>
+          <AdminLayout>
+            <AdminTrendsPage />
           </AdminLayout>
         </AdminRoute>
       </Route>

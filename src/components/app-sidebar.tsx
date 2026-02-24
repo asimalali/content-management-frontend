@@ -14,6 +14,10 @@ import {
   CalendarDays,
   Lock,
   Image as ImageIcon,
+  ImagePlay,
+  Globe,
+  Package,
+  UserPen,
 } from 'lucide-react';
 import { ComingSoonBadge } from '@/components/coming-soon-badge';
 import { LOW_CREDIT_THRESHOLD } from '@/config/constants';
@@ -49,8 +53,12 @@ const menuItems: MenuItem[] = [
   { title: 'القوالب', url: '/templates', icon: FileText, featureFlag: 'templates' },
   { title: 'إنشاء محتوى', url: '/create', icon: Sparkles, featureFlag: 'content_generation' },
   { title: 'إنشاء صورة', url: '/generate-image', icon: ImageIcon, featureFlag: 'image_generation' },
+  { title: 'تعديل صورة', url: '/edit-image', icon: ImagePlay, featureFlag: 'image_editing' },
   { title: 'مكتبة المحتوى', url: '/library', icon: Library, featureFlag: 'content_library' },
   { title: 'تقويم المحتوى', url: '/calendar', icon: CalendarDays, featureFlag: 'content_calendar' },
+  { title: 'المناسبات والتوجهات', url: '/events', icon: Globe, featureFlag: 'global_events' },
+  { title: 'مولّد البايو', url: '/bio-generator', icon: UserPen, featureFlag: 'bio_generator' },
+  { title: 'كتالوج المنتجات', url: '/products', icon: Package, featureFlag: 'product_catalog' },
   { title: 'نشر محتوى', url: '/publish', icon: Send, featureFlag: 'publishing' },
   { title: 'المنشورات', url: '/posts', icon: MessageSquare, featureFlag: 'publishing' },
   { title: 'الباقات', url: '/plans', icon: CreditCard, featureFlag: 'subscription_plans' },

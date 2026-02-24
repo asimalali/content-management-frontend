@@ -8,6 +8,7 @@
 // --- Credits ---
 export const LOW_CREDIT_THRESHOLD = 5;
 export const IMAGE_GENERATION_CREDIT_COST = 3;
+export const IMAGE_EDITING_CREDIT_COST = 3;
 
 // --- UI Feedback ---
 export const COPY_FEEDBACK_DURATION = 2000; // ms

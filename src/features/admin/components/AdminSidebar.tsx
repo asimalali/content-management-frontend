@@ -9,6 +9,8 @@ import {
   BookOpen,
   Receipt,
   Brain,
+  Globe,
+  TrendingUp,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -40,6 +42,8 @@ const adminMenuItems: AdminMenuItem[] = [
   { title: 'خصائص المنصة', url: '/admin/feature-flags', icon: Flag },
   { title: 'تعريفات الخصائص', url: '/admin/feature-definitions', icon: BookOpen },
   { title: 'مزودي الذكاء الاصطناعي', url: '/admin/ai-providers', icon: Brain },
+  { title: 'المناسبات العالمية', url: '/admin/events', icon: Globe },
+  { title: 'التوجهات الشهرية', url: '/admin/trends', icon: TrendingUp },
 ];
 
 function GatedAdminMenuItem({ item, isActive }: { item: AdminMenuItem; isActive: boolean }) {

@@ -6,6 +6,9 @@ import type {
   InstantPublishRequest,
   PublishResult,
   PostMetricsData,
+  SchedulePostRequest,
+  ScheduledPostResponse,
+  RescheduleRequest,
 } from '../types';
 
 export const publishingApi = {
@@ -55,5 +58,29 @@ export const publishingApi = {
   getPostMetrics: async (jobId: string): Promise<PostMetricsData> => {
     const response = await api.get<PostMetricsData>(`/posts/jobs/${jobId}/metrics`);
     return response.data;
+  },
+
+  // Schedule a post for future publishing
+  schedulePost: async (data: SchedulePostRequest): Promise<ScheduledPostResponse> => {
+    const response = await api.post<ScheduledPostResponse>('/posts/schedule', data);
+    return response.data;
+  },
+
+  // Get all scheduled posts
+  getScheduledPosts: async (projectId?: string): Promise<ScheduledPostResponse[]> => {
+    const params = projectId ? { projectId } : {};
+    const response = await api.get<ScheduledPostResponse[]>('/posts/scheduled', { params });
+    return response.data;
+  },
+
+  // Reschedule a scheduled job
+  rescheduleJob: async (jobId: string, data: RescheduleRequest): Promise<PostJob> => {
+    const response = await api.put<PostJob>(`/posts/jobs/${jobId}/reschedule`, data);
+    return response.data;
+  },
+
+  // Cancel a scheduled job
+  cancelScheduledJob: async (jobId: string): Promise<void> => {
+    await api.delete(`/posts/jobs/${jobId}/cancel`);
   },
 };

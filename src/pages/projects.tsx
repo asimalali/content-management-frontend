@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { Plus, MoreHorizontal, Pencil, Trash2, FolderKanban, Loader2 } from 'lucide-react';
+import { Plus, MoreHorizontal, Pencil, Trash2, FolderKanban, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -15,14 +15,17 @@ import { toast } from 'sonner';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { BioGeneratorDialog } from '@/features/bio-generator';
 
 function ProjectCard({
   project,
   onDelete,
+  onGenerateBio,
   isDeleting,
 }: {
   project: Project;
   onDelete: () => void;
+  onGenerateBio: () => void;
   isDeleting: boolean;
 }) {
   const colors = ['bg-primary', 'bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500'];
@@ -56,6 +59,10 @@ function ProjectCard({
                 <Pencil className="ml-2 h-4 w-4" />
                 تعديل
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onGenerateBio}>
+              <Sparkles className="ml-2 h-4 w-4" />
+              مولد البايو
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDelete} className="text-destructive">
               <Trash2 className="ml-2 h-4 w-4" />
@@ -97,6 +104,7 @@ function ProjectCardSkeleton() {
 
 export default function ProjectsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [bioProject, setBioProject] = useState<{ id: string; name: string } | null>(null);
 
   // Fetch projects from API
   const { data: projects, isLoading, isError, refetch } = useProjects();
@@ -164,6 +172,7 @@ export default function ProjectsPage() {
               key={project.id}
               project={project}
               onDelete={() => setDeleteId(project.id)}
+              onGenerateBio={() => setBioProject({ id: project.id, name: project.name })}
               isDeleting={deleteProject.isPending && deleteId === project.id}
             />
           ))}
@@ -179,6 +188,16 @@ export default function ProjectsPage() {
         onConfirm={handleDelete}
         isPending={deleteProject.isPending}
       />
+
+      {/* Bio Generator Dialog */}
+      {bioProject && (
+        <BioGeneratorDialog
+          isOpen={!!bioProject}
+          onClose={() => setBioProject(null)}
+          projectId={bioProject.id}
+          projectName={bioProject.name}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { contentApi } from '../api/content-api';
 import { creditKeys } from '@/features/credits';
-import type { GenerateContentRequest, GenerateImageRequest, UpdateContentRequest } from '../types';
+import type { EditImageRequest, GenerateContentRequest, GenerateImageRequest, UpdateContentRequest } from '../types';
 
 // Query keys
 export const contentKeys = {
@@ -86,6 +86,18 @@ export function useGenerateImage() {
 
   return useMutation({
     mutationFn: (data: GenerateImageRequest) => contentApi.generateImage(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: creditKeys.balance });
+    },
+  });
+}
+
+// Edit image
+export function useEditImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: EditImageRequest) => contentApi.editImage(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: creditKeys.balance });
     },
