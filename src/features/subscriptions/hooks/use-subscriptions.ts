@@ -22,7 +22,6 @@ export function usePlans() {
   return useQuery({
     queryKey: planKeys.all,
     queryFn: plansApi.getAll,
-    staleTime: 1000 * 60 * 10, // 10 minutes - plans don't change often
   });
 }
 

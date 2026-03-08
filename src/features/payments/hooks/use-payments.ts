@@ -14,7 +14,6 @@ export function usePaymentGateways() {
   return useQuery({
     queryKey: paymentKeys.gateways,
     queryFn: paymentsApi.getGateways,
-    staleTime: 1000 * 60 * 10, // 10 minutes - gateways don't change often
   });
 }
 

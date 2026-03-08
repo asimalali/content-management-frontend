@@ -50,7 +50,6 @@ export function usePostMetrics(jobId: string | undefined, enabled = true) {
     queryFn: () => publishingApi.getPostMetrics(jobId!),
     enabled: !!jobId && enabled,
     refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 25000, // Data is fresh for 25 seconds
   });
 }
 

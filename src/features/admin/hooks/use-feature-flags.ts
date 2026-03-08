@@ -76,19 +76,3 @@ export function useDeleteFeatureFlag() {
   });
 }
 
-/**
- * Mutation hook to manually invalidate feature flag cache (emergency use).
- * Useful for forcing immediate updates across all clients.
- */
-export function useInvalidateFeatureFlagCache() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => adminFeatureFlagsApi.invalidateCache(),
-    onSuccess: () => {
-      // Force immediate refetch for real-time updates
-      queryClient.invalidateQueries({ queryKey: ['config'] });
-      queryClient.refetchQueries({ queryKey: ['config'] });
-    },
-  });
-}

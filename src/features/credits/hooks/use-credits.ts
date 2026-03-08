@@ -12,7 +12,6 @@ export function useCreditBalance() {
   return useQuery({
     queryKey: creditKeys.balance,
     queryFn: creditsApi.getBalance,
-    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 

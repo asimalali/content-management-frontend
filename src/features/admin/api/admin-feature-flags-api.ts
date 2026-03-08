@@ -50,7 +50,4 @@ export const adminFeatureFlagsApi = {
 
   deleteFlag: (flagKey: string) =>
     api.delete(`/admin/feature-flags/${flagKey}`),
-
-  invalidateCache: () =>
-    api.post('/admin/feature-flags/invalidate-cache'),
 };

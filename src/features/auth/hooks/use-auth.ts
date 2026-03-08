@@ -27,7 +27,6 @@ export function useAuth() {
       }
     },
     retry: false,
-    staleTime: 1000 * 60 * 5,
   });
 
   // Register mutation
