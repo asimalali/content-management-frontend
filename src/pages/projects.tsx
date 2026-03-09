@@ -16,6 +16,8 @@ import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { BioGeneratorDialog } from '@/features/bio-generator';
+import { PersonaPanel } from '@/features/audience-personas';
+import { useFeatureFlag } from '@/features/config/hooks/use-feature-flag';
 
 function ProjectCard({
   project,
@@ -105,6 +107,7 @@ function ProjectCardSkeleton() {
 export default function ProjectsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [bioProject, setBioProject] = useState<{ id: string; name: string } | null>(null);
+  const { isEnabled: personasEnabled } = useFeatureFlag('audience_personas');
 
   // Fetch projects from API
   const { data: projects, isLoading, isError, refetch } = useProjects();
@@ -197,6 +200,10 @@ export default function ProjectsPage() {
           projectId={bioProject.id}
           projectName={bioProject.name}
         />
+      )}
+
+      {personasEnabled && (
+        <PersonaPanel />
       )}
     </div>
   );

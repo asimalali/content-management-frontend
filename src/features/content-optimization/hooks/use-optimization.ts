@@ -6,6 +6,7 @@ import type {
   BrandConsistencyRequest,
   HashtagAnalysisRequest,
   RepurposeRequest,
+  InsightsRequest,
 } from '../types';
 
 export function useOptimizeForPlatform() {
@@ -35,5 +36,11 @@ export function useAnalyzeHashtags() {
 export function useRepurposeContent() {
   return useMutation({
     mutationFn: (request: RepurposeRequest) => optimizationApi.repurposeContent(request),
+  });
+}
+
+export function useGenerateInsights() {
+  return useMutation({
+    mutationFn: (request: InsightsRequest) => optimizationApi.generateInsights(request),
   });
 }

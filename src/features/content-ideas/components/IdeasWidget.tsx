@@ -60,19 +60,31 @@ function IdeaCard({ idea, onGenerate, isGenerating }: {
   );
 }
 
-export function IdeasWidget() {
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
-  const [isOpen, setIsOpen] = useState(false);
+interface IdeasWidgetProps {
+  projectId?: string;
+  hideProjectSelector?: boolean;
+  initiallyOpen?: boolean;
+}
+
+export function IdeasWidget({
+  projectId,
+  hideProjectSelector = false,
+  initiallyOpen = false,
+}: IdeasWidgetProps = {}) {
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId ?? '');
+  const [isOpen, setIsOpen] = useState(initiallyOpen);
   const [generatingIdeaId, setGeneratingIdeaId] = useState<string | null>(null);
 
+  const effectiveProjectId = projectId ?? selectedProjectId;
+
   const { data: projects } = useProjects();
-  const { data: ideas, isLoading: isLoadingIdeas } = useProjectIdeas(selectedProjectId || undefined);
+  const { data: ideas, isLoading: isLoadingIdeas } = useProjectIdeas(effectiveProjectId || undefined);
   const refreshIdeas = useRefreshIdeas();
   const generateFromIdea = useGenerateFromIdea();
 
   const handleRefresh = () => {
-    if (!selectedProjectId) return;
-    refreshIdeas.mutate({ projectId: selectedProjectId });
+    if (!effectiveProjectId) return;
+    refreshIdeas.mutate({ projectId: effectiveProjectId });
   };
 
   const handleGenerate = (ideaId: string) => {
@@ -114,22 +126,24 @@ export function IdeasWidget() {
         <CollapsibleContent>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="اختر المشروع" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(projects || []).map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!hideProjectSelector && (
+                <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="اختر المشروع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(projects || []).map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               <Button
                 onClick={handleRefresh}
-                disabled={!selectedProjectId || refreshIdeas.isPending}
+                disabled={!effectiveProjectId || refreshIdeas.isPending}
                 variant="outline"
               >
                 {refreshIdeas.isPending ? (
@@ -147,7 +161,7 @@ export function IdeasWidget() {
               </div>
             )}
 
-            {isLoadingIdeas && selectedProjectId && (
+            {isLoadingIdeas && effectiveProjectId && (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
@@ -166,7 +180,7 @@ export function IdeasWidget() {
               </div>
             )}
 
-            {ideas && ideas.length === 0 && selectedProjectId && !isLoadingIdeas && (
+            {ideas && ideas.length === 0 && effectiveProjectId && !isLoadingIdeas && (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 لا توجد أفكار لهذا المشروع. اضغط "تحديث الأفكار" لتوليد أفكار جديدة.
               </div>

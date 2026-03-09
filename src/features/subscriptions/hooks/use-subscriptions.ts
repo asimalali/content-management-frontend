@@ -46,6 +46,21 @@ export function useSubscription() {
   });
 }
 
+export function usePlanFeature(featureKey: string) {
+  const subscription = useSubscription();
+  const plans = usePlans();
+
+  const currentPlan = plans.data?.find((plan) => plan.id === subscription.data?.planId);
+  const rawValue = currentPlan?.features.find((feature) => feature.key === featureKey)?.value;
+  const normalizedValue = rawValue?.toLowerCase();
+
+  return {
+    hasFeature: normalizedValue === 'true' || normalizedValue === '1' || normalizedValue === 'unlimited',
+    currentPlan,
+    isLoading: subscription.isLoading || plans.isLoading,
+  };
+}
+
 // Create subscription
 export function useCreateSubscription() {
   const queryClient = useQueryClient();

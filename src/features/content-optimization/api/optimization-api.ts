@@ -10,6 +10,8 @@ import type {
   HashtagAnalysisResponse,
   RepurposeRequest,
   RepurposeResponse,
+  InsightsRequest,
+  PerformanceInsightsResponse,
 } from '../types';
 
 export const optimizationApi = {
@@ -27,4 +29,9 @@ export const optimizationApi = {
 
   repurposeContent: (request: RepurposeRequest) =>
     api.post<RepurposeResponse>('/content/repurpose', request),
+
+  generateInsights: async (request: InsightsRequest): Promise<PerformanceInsightsResponse> => {
+    const response = await api.post<PerformanceInsightsResponse>('/content/insights', request);
+    return response.data;
+  },
 };

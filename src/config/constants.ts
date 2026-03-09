@@ -21,6 +21,8 @@ export const POST_MAX_CHARS = 2200;
 // --- Pagination ---
 export const RECENT_CONTENT_COUNT = 5;
 export const DEFAULT_PAGE_SIZE = 50;
+export const DASHBOARD_UPCOMING_SCHEDULED_COUNT = 4;
+export const DASHBOARD_PROJECT_STORAGE_KEY = 'dashboard:selectedProjectId';
 
 // --- Locale ---
 export const DATE_LOCALE = 'ar-SA' as const;

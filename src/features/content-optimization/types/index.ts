@@ -125,3 +125,22 @@ export interface RepurposeDialogProps {
   projectId: string;
   contentId?: string;
 }
+
+export interface InsightsRequest {
+  ProjectId: string;
+  Language?: string;
+}
+
+export interface InsightResponse {
+  title: string;
+  description: string;
+  category: string;
+  actionableAdvice: string;
+}
+
+export interface PerformanceInsightsResponse {
+  insights: InsightResponse[];
+  overallSummary: string;
+  totalPostsAnalyzed: number;
+  creditsUsed: number;
+}

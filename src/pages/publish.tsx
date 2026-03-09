@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearch } from 'wouter';
 import {
   Send,
@@ -43,6 +43,9 @@ import {
   type PublishResult,
 } from '@/features/publishing';
 import { OptimizationDialog } from '@/features/content-optimization';
+import { useAnalyticsBestTimes } from '@/features/analytics';
+import { useFeatureFlag } from '@/features/config/hooks/use-feature-flag';
+import { usePlanFeature } from '@/features/subscriptions';
 import { toast } from 'sonner';
 import { POST_MAX_CHARS, CONTENT_PREVIEW_LENGTH } from '@/config/constants';
 import { truncateText } from '@/utils';
@@ -63,6 +66,19 @@ interface SelectedDestination {
   destinationId: string; // Platform-specific destination ID for API
   accountName: string;
   platform: string;
+}
+
+function toDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toTimeInputValue(date: Date) {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
 }
 
 export default function PublishPage() {
@@ -92,10 +108,34 @@ export default function PublishPage() {
   const { data: projects, isLoading: isLoadingProjects } = useProjects();
   const { data: contentItems, isLoading: isLoadingContent } = useContentList(selectedProjectId || undefined);
   const { data: connectedAccounts, isLoading: isLoadingAccounts } = useConnectedAccounts();
+  const { isEnabled: analyticsWorkspaceEnabled } = useFeatureFlag('analytics_workspace');
+  const { hasFeature: hasAnalyticsFeature } = usePlanFeature('analytics');
 
   // Mutations
   const publishInstant = usePublishInstant();
   const schedulePost = useSchedulePost();
+  const analyticsSchedulingEnabled = analyticsWorkspaceEnabled && hasAnalyticsFeature;
+  const bestTimesQuery = useAnalyticsBestTimes(
+    selectedProjectId || undefined,
+    publishMode === 'schedule' && analyticsSchedulingEnabled
+  );
+  const selectedPlatforms = useMemo(
+    () => Array.from(new Set(selectedDestinations.map((destination) => destination.platform))),
+    [selectedDestinations]
+  );
+  const recommendedSlots = useMemo(() => {
+    const recommendations = bestTimesQuery.data?.recommendations ?? [];
+
+    if (selectedPlatforms.length === 0) {
+      return recommendations.slice(0, 3);
+    }
+
+    const platformRecommendations = recommendations.filter((recommendation) =>
+      selectedPlatforms.includes(recommendation.platform)
+    );
+
+    return (platformRecommendations.length > 0 ? platformRecommendations : recommendations).slice(0, 3);
+  }, [bestTimesQuery.data?.recommendations, selectedPlatforms]);
 
   // Initialize content from URL params once content items are loaded
   useEffect(() => {
@@ -186,6 +226,19 @@ export default function PublishPage() {
     return selectedDestinations.some(
       d => d.accountId === accountId && d.destinationId === destinationId
     );
+  };
+
+  const applyRecommendedTime = (nextOccurrenceUtc: string) => {
+    const recommendedDate = new Date(nextOccurrenceUtc);
+
+    if (Number.isNaN(recommendedDate.getTime())) {
+      toast.error('تعذر تطبيق الوقت المقترح');
+      return;
+    }
+
+    setPublishMode('schedule');
+    setScheduledDate(toDateInputValue(recommendedDate));
+    setScheduledTime(toTimeInputValue(recommendedDate));
   };
 
   // Handle publish or schedule
@@ -540,24 +593,106 @@ export default function PublishPage() {
               </div>
 
               {publishMode === 'schedule' && (
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="space-y-2">
-                    <Label>التاريخ</Label>
-                    <Input
-                      type="date"
-                      value={scheduledDate}
-                      onChange={(e) => setScheduledDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>التاريخ</Label>
+                      <Input
+                        type="date"
+                        value={scheduledDate}
+                        onChange={(e) => setScheduledDate(e.target.value)}
+                        min={toDateInputValue(new Date())}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>الوقت</Label>
+                      <Input
+                        type="time"
+                        value={scheduledTime}
+                        onChange={(e) => setScheduledTime(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>الوقت</Label>
-                    <Input
-                      type="time"
-                      value={scheduledTime}
-                      onChange={(e) => setScheduledTime(e.target.value)}
-                    />
-                  </div>
+
+                  {selectedProjectId && !analyticsSchedulingEnabled && analyticsWorkspaceEnabled && (
+                    <Alert>
+                      <Clock className="h-4 w-4" />
+                      <AlertTitle>أفضل أوقات النشر غير متاحة في باقتك</AlertTitle>
+                      <AlertDescription>
+                        تتوفر توصيات التوقيت الذكي ضمن ميزة التحليلات في الباقات المؤهلة.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {selectedProjectId && analyticsSchedulingEnabled && (
+                    <div className="space-y-3 rounded-lg border p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium">أوقات مقترحة للنشر</p>
+                          <p className="text-sm text-muted-foreground">
+                            مبنية على أداء المنشورات السابقة للمشروع
+                          </p>
+                        </div>
+                        {bestTimesQuery.isLoading && (
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                      </div>
+
+                      {bestTimesQuery.isLoading ? (
+                        <div className="space-y-2">
+                          <Skeleton className="h-16 w-full" />
+                          <Skeleton className="h-16 w-full" />
+                        </div>
+                      ) : recommendedSlots.length > 0 ? (
+                        <div className="space-y-2">
+                          {recommendedSlots.map((recommendation) => {
+                            const nextOccurrence = new Date(recommendation.nextOccurrenceUtc);
+                            const formattedNextOccurrence = Number.isNaN(nextOccurrence.getTime())
+                              ? 'غير متاح'
+                              : new Intl.DateTimeFormat('ar-SA', {
+                                  weekday: 'long',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                }).format(nextOccurrence);
+
+                            return (
+                              <div
+                                key={`${recommendation.platform}-${recommendation.dayOfWeek}-${recommendation.hourOfDay}-${recommendation.minute}`}
+                                className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 p-3"
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="secondary">{recommendation.platform}</Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      ثقة {Math.round(recommendation.confidence * 100)}%
+                                    </span>
+                                  </div>
+                                  <p className="text-sm font-medium">{formattedNextOccurrence}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    متوسط التفاعل {recommendation.averageEngagementScore.toFixed(1)} من {recommendation.sampleSize} عينة
+                                  </p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => applyRecommendedTime(recommendation.nextOccurrenceUtc)}
+                                >
+                                  تطبيق الوقت
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          {bestTimesQuery.data?.message ?? 'لا توجد بيانات كافية لاقتراح وقت مناسب حالياً.'}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

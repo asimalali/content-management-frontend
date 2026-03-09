@@ -18,6 +18,7 @@ import {
   Globe,
   Package,
   UserPen,
+  BarChart3,
 } from 'lucide-react';
 import { ComingSoonBadge } from '@/components/coming-soon-badge';
 import { LOW_CREDIT_THRESHOLD } from '@/config/constants';
@@ -25,6 +26,7 @@ import { BrandLogo } from '@/components/brand-logo';
 import { BrandName, BrandTagline } from '@/components/brand-name';
 import { useAuth } from '@/features/auth';
 import { useFeatureFlag } from '@/features/config/hooks/use-feature-flag';
+import { usePlanFeature } from '@/features/subscriptions';
 import {
   Sidebar,
   SidebarContent,
@@ -45,6 +47,7 @@ interface MenuItem {
   url: string;
   icon: React.ComponentType<{ className?: string }>;
   featureFlag?: string;
+  planFeatureKey?: string;
 }
 
 const menuItems: MenuItem[] = [
@@ -56,6 +59,7 @@ const menuItems: MenuItem[] = [
   { title: 'تعديل صورة', url: '/edit-image', icon: ImagePlay, featureFlag: 'image_editing' },
   { title: 'مكتبة المحتوى', url: '/library', icon: Library, featureFlag: 'content_library' },
   { title: 'تقويم المحتوى', url: '/calendar', icon: CalendarDays, featureFlag: 'content_calendar' },
+  { title: 'التحليلات', url: '/analytics', icon: BarChart3, featureFlag: 'analytics_workspace', planFeatureKey: 'analytics' },
   { title: 'المناسبات والتوجهات', url: '/events', icon: Globe, featureFlag: 'global_events' },
   { title: 'مولّد البايو', url: '/bio-generator', icon: UserPen, featureFlag: 'bio_generator' },
   { title: 'كتالوج المنتجات', url: '/products', icon: Package, featureFlag: 'product_catalog' },
@@ -67,6 +71,7 @@ const menuItems: MenuItem[] = [
 
 function GatedMenuItem({ item, isActive }: { item: MenuItem; isActive: boolean }) {
   const { isEnabled, isComingSoon, isLoading } = useFeatureFlag(item.featureFlag ?? '');
+  const { hasFeature, isLoading: isLoadingPlanFeature } = usePlanFeature(item.planFeatureKey ?? '');
 
   // Items without a feature flag are always shown
   if (!item.featureFlag) {
@@ -81,6 +86,8 @@ function GatedMenuItem({ item, isActive }: { item: MenuItem; isActive: boolean }
       </SidebarMenuItem>
     );
   }
+
+  if (item.planFeatureKey && !isLoadingPlanFeature && !hasFeature) return null;
 
   // Hide if loading or fully disabled (not coming-soon)
   if (isLoading || (!isEnabled && !isComingSoon)) return null;

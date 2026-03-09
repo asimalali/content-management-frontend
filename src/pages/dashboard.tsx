@@ -1,236 +1,332 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
+import { CalendarClock, Coins, FolderKanban, Plus, Send, Sparkles, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FolderKanban, FileText, Sparkles, TrendingUp, Coins } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { BrandName } from '@/components/brand-name';
 import { useProjects } from '@/features/projects';
 import { useContentList } from '@/features/content';
 import { useCreditBalance } from '@/features/credits';
-import { BrandName } from '@/components/brand-name';
-import { formatDate } from '@/utils';
-import { RECENT_CONTENT_COUNT } from '@/config/constants';
+import { IdeasWidget } from '@/features/content-ideas/components/IdeasWidget';
+import { useScheduledPosts } from '@/features/publishing';
+import { useAnalyticsSummary } from '@/features/analytics';
+import { usePlanFeature } from '@/features/subscriptions';
+import { useFeatureFlag } from '@/features/config/hooks/use-feature-flag';
+import { formatDateTime, truncateText } from '@/utils';
+import {
+  CONTENT_PREVIEW_LENGTH,
+  DASHBOARD_PROJECT_STORAGE_KEY,
+  DASHBOARD_UPCOMING_SCHEDULED_COUNT,
+  LOW_CREDIT_THRESHOLD,
+  RECENT_CONTENT_COUNT,
+} from '@/config/constants';
 
-// Stats card component
-function StatsCard({
+function StatCard({
   title,
   value,
   description,
-  icon: Icon,
-  trend,
 }: {
   title: string;
   value: string | number;
   description?: string;
-  icon: React.ElementType;
-  trend?: string;
 }) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        )}
-        {trend && (
-          <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
-            <TrendingUp className="h-3 w-3" />
-            {trend}
-          </div>
-        )}
+        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
       </CardContent>
     </Card>
-  );
-}
-
-function StatsCardSkeleton() {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-4 rounded" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-8 w-16 mb-1" />
-        <Skeleton className="h-3 w-32" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function RecentContentItem({
-  title,
-  templateName,
-  createdAt,
-}: {
-  title: string;
-  templateName: string;
-  createdAt: string;
-}) {
-  return (
-    <div className="flex items-center justify-between py-3 border-b last:border-0">
-      <div>
-        <p className="font-medium text-sm">{title || 'محتوى بدون عنوان'}</p>
-        <p className="text-xs text-muted-foreground">{templateName}</p>
-      </div>
-      <span className="text-xs text-muted-foreground">
-        {formatDate(createdAt)}
-      </span>
-    </div>
   );
 }
 
 export default function DashboardPage() {
-  // Fetch data from APIs
   const { data: projects, isLoading: isLoadingProjects } = useProjects();
-  const { data: contents, isLoading: isLoadingContents } = useContentList();
   const { data: creditBalance, isLoading: isLoadingCredits } = useCreditBalance();
+  const { isEnabled: commandCenterEnabled } = useFeatureFlag('dashboard_command_center');
+  const { isEnabled: contentIdeasEnabled } = useFeatureFlag('content_ideas_widget');
+  const { isEnabled: analyticsWorkspaceEnabled } = useFeatureFlag('analytics_workspace');
+  const { hasFeature: hasAnalyticsFeature } = usePlanFeature('analytics');
 
-  const isLoading = isLoadingProjects || isLoadingContents || isLoadingCredits;
+  const [selectedProjectId, setSelectedProjectId] = useState('');
 
-  const stats = {
-    projects: projects?.length || 0,
-    content: contents?.length || 0,
-    creditsUsed: creditBalance?.used || 0,
-    creditsTotal: creditBalance?.allocated || 0,
-    creditsBalance: creditBalance?.available || 0,
-  };
+  useEffect(() => {
+    if (!projects?.length) return;
 
-  // Get recent content (last 5)
-  const recentContent = contents?.slice(0, RECENT_CONTENT_COUNT) || [];
+    const storedProjectId = typeof window !== 'undefined'
+      ? window.localStorage.getItem(DASHBOARD_PROJECT_STORAGE_KEY)
+      : null;
+    const defaultProjectId = projects.some((project) => project.id === storedProjectId)
+      ? storedProjectId
+      : projects[0].id;
+
+    if (!selectedProjectId && defaultProjectId) {
+      setSelectedProjectId(defaultProjectId);
+    }
+  }, [projects, selectedProjectId]);
+
+  useEffect(() => {
+    if (!selectedProjectId || typeof window === 'undefined') return;
+    window.localStorage.setItem(DASHBOARD_PROJECT_STORAGE_KEY, selectedProjectId);
+  }, [selectedProjectId]);
+
+  const { data: contentItems, isLoading: isLoadingContent } = useContentList(selectedProjectId || undefined);
+  const { data: scheduledPosts, isLoading: isLoadingScheduled } = useScheduledPosts(selectedProjectId || undefined);
+
+  const analyticsEnabled = analyticsWorkspaceEnabled && hasAnalyticsFeature;
+  const analyticsSummary = useAnalyticsSummary(selectedProjectId || undefined, analyticsEnabled);
+
+  const recentContent = useMemo(
+    () => (contentItems || []).slice(0, RECENT_CONTENT_COUNT),
+    [contentItems]
+  );
+  const upcomingScheduled = useMemo(
+    () => (scheduledPosts || []).slice(0, DASHBOARD_UPCOMING_SCHEDULED_COUNT),
+    [scheduledPosts]
+  );
+
+  if (!commandCenterEnabled) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold tracking-tight">لوحة التحكم</h1>
+        <p className="text-muted-foreground">تم تعطيل لوحة القيادة المتقدمة من إعدادات الميزات.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">لوحة التحكم</h1>
-        <p className="text-muted-foreground">
-          مرحباً بك في <BrandName variant="short" />
-        </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">لوحة التحكم</h1>
+          <p className="text-muted-foreground">
+            مركز العمل اليومي في <BrandName variant="short" />
+          </p>
+        </div>
+
+        <div className="w-full max-w-sm">
+          {isLoadingProjects ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+              <SelectTrigger>
+                <SelectValue placeholder="اختر المشروع" />
+              </SelectTrigger>
+              <SelectContent>
+                {(projects || []).map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {isLoading ? (
+      {creditBalance && creditBalance.available <= LOW_CREDIT_THRESHOLD && (
+        <Alert>
+          <Coins className="h-4 w-4" />
+          <AlertTitle>الرصيد منخفض</AlertTitle>
+          <AlertDescription>
+            لديك {creditBalance.available} وحدة فقط. راجع الباقات قبل أن يتعطل العمل اليومي.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {isLoadingProjects || isLoadingCredits ? (
           <>
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
           </>
         ) : (
           <>
-            <StatsCard
-              title="المشاريع"
-              value={stats.projects}
-              description="مشاريع نشطة"
-              icon={FolderKanban}
-            />
-            <StatsCard
-              title="المحتوى المنشأ"
-              value={stats.content}
-              description="قطعة محتوى"
-              icon={FileText}
-            />
-            <StatsCard
-              title="الرصيد المتبقي"
-              value={stats.creditsBalance}
-              description="وحدة متاحة"
-              icon={Coins}
-            />
-            <StatsCard
-              title="الوحدات المستخدمة"
-              value={stats.creditsUsed}
-              description="وحدة مستهلكة"
-              icon={Sparkles}
+            <StatCard title="المشاريع" value={projects?.length || 0} description="المشاريع المتاحة" />
+            <StatCard title="الرصيد المتبقي" value={creditBalance?.available || 0} description={`من ${creditBalance?.allocated || 0}`} />
+            <StatCard title="المحتوى في المشروع" value={contentItems?.length || 0} description="مسودات ومحتوى جاهز" />
+            <StatCard
+              title="منشورات مجدولة"
+              value={scheduledPosts?.length || 0}
+              description={analyticsSummary.data ? `${analyticsSummary.data.totalPublishedPosts} منشور منشور` : 'تابع الجدولة والنشر'}
             />
           </>
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Link href="/create">
-          <Card className="cursor-pointer hover:bg-accent/50 transition-colors h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                إنشاء محتوى جديد
-              </CardTitle>
-              <CardDescription>
-                استخدم الذكاء الاصطناعي لإنشاء محتوى احترافي
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+        <Card>
+          <CardHeader>
+            <CardTitle>الإجراءات السريعة</CardTitle>
+            <CardDescription>ابدأ من الخطوة التالية مباشرة</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3">
+            <Link href="/create">
+              <Card className="cursor-pointer transition-colors hover:bg-accent/40">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Sparkles className="h-4 w-4" />
+                    إنشاء محتوى
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </Link>
+            <Link href="/calendar">
+              <Card className="cursor-pointer transition-colors hover:bg-accent/40">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <CalendarClock className="h-4 w-4" />
+                    خطة التقويم
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </Link>
+            <Link href="/publish">
+              <Card className="cursor-pointer transition-colors hover:bg-accent/40">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Send className="h-4 w-4" />
+                    نشر وجدولة
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </Link>
+          </CardContent>
+        </Card>
 
-        <Link href="/projects/new">
-          <Card className="cursor-pointer hover:bg-accent/50 transition-colors h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FolderKanban className="h-5 w-5 text-primary" />
-                إنشاء مشروع
-              </CardTitle>
-              <CardDescription>
-                أضف مشروعاً جديداً لتنظيم محتواك
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
+        <Card>
+          <CardHeader>
+            <CardTitle>لقطة التحليلات</CardTitle>
+            <CardDescription>أهم المؤشرات للمشروع الحالي</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!analyticsEnabled ? (
+              <div className="text-sm text-muted-foreground">
+                الترقية إلى باقة تدعم التحليلات لعرض أفضل الأوقات وأداء المنشورات.
+              </div>
+            ) : analyticsSummary.isLoading ? (
+              <Skeleton className="h-32 w-full" />
+            ) : analyticsSummary.data ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">إعجابات</div>
+                    <div className="text-xl font-semibold">{analyticsSummary.data.totalLikes}</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">مشاركات</div>
+                    <div className="text-xl font-semibold">{analyticsSummary.data.totalShares}</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">تعليقات</div>
+                    <div className="text-xl font-semibold">{analyticsSummary.data.totalComments}</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">متوسط التفاعل</div>
+                    <div className="text-xl font-semibold">{analyticsSummary.data.averageEngagementScore.toFixed(1)}</div>
+                  </div>
+                </div>
 
-        <Link href="/templates">
-          <Card className="cursor-pointer hover:bg-accent/50 transition-colors h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                تصفح القوالب
-              </CardTitle>
-              <CardDescription>
-                اختر من مكتبة القوالب الجاهزة
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/analytics">
+                    <TrendingUp className="h-4 w-4 ml-2" />
+                    فتح التحليلات
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground">لا توجد بيانات تحليلات بعد.</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>النشاط الأخير</CardTitle>
-          <CardDescription>آخر المحتويات المنشأة</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingContents ? (
-            <div className="space-y-3">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : recentContent.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              لا يوجد نشاط حتى الآن. ابدأ بإنشاء محتوى جديد!
-            </div>
-          ) : (
-            <div>
-              {recentContent.map((item) => (
-                <RecentContentItem
-                  key={item.id}
-                  title={item.title}
-                  templateName={item.templateName}
-                  createdAt={item.createdAt}
-                />
-              ))}
-              {contents && contents.length > RECENT_CONTENT_COUNT && (
-                <Link href="/library" className="block text-center text-sm text-primary hover:underline mt-4">
-                  عرض كل المحتوى ({contents.length})
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>المنشورات المجدولة القادمة</CardTitle>
+                <CardDescription>المهام القريبة للمشروع الحالي</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/publish">
+                  <Plus className="h-4 w-4 ml-1" />
+                  جديد
                 </Link>
-              )}
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {isLoadingScheduled ? (
+              <>
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </>
+            ) : upcomingScheduled.length ? (
+              upcomingScheduled.map((post) => (
+                <div key={post.postId} className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="font-medium">{truncateText(post.postText, CONTENT_PREVIEW_LENGTH * 3)}</div>
+                    <Badge variant="outline">{post.jobs.length} وجهة</Badge>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {formatDateTime(post.scheduledAt)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground">لا توجد منشورات مجدولة لهذا المشروع.</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>آخر المحتويات</CardTitle>
+            <CardDescription>أحدث ما تم إنشاؤه داخل المشروع</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {isLoadingContent ? (
+              <>
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </>
+            ) : recentContent.length ? (
+              recentContent.map((item) => (
+                <div key={item.id} className="rounded-lg border p-3">
+                  <div className="font-medium">{truncateText(item.content, CONTENT_PREVIEW_LENGTH * 3)}</div>
+                  <div className="mt-2 text-xs text-muted-foreground">{item.templateName}</div>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground">لا يوجد محتوى حديث في هذا المشروع.</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {contentIdeasEnabled && selectedProjectId && (
+        <IdeasWidget projectId={selectedProjectId} hideProjectSelector initiallyOpen />
+      )}
+
+      {!selectedProjectId && !isLoadingProjects && (
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            <FolderKanban className="mx-auto h-10 w-10 mb-3" />
+            أنشئ مشروعاً أو اختر مشروعاً لبدء لوحة القيادة.
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

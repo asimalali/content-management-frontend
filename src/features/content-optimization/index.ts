@@ -8,6 +8,7 @@ export {
   useCheckBrandVoice,
   useAnalyzeHashtags,
   useRepurposeContent,
+  useGenerateInsights,
 } from './hooks/use-optimization';
 export type {
   OptimizeRequest,
@@ -23,4 +24,7 @@ export type {
   HashtagAnalysisResponse,
   RepurposeRequest,
   RepurposeResponse,
+  InsightsRequest,
+  InsightResponse,
+  PerformanceInsightsResponse,
 } from './types';

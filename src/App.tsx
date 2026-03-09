@@ -29,6 +29,7 @@ const OAuthCallbackPage = lazy(() => import('@/pages/settings/oauth-callback'));
 const PublishPage = lazy(() => import('@/pages/publish'));
 const PostsPage = lazy(() => import('@/pages/posts'));
 const CalendarPage = lazy(() => import('@/pages/calendar'));
+const AnalyticsPage = lazy(() => import('@/pages/analytics'));
 const ImageGeneratePage = lazy(() => import('@/pages/image-generate'));
 const ImageEditPage = lazy(() => import('@/pages/image-edit'));
 const EventsPage = lazy(() => import('@/pages/events'));
@@ -238,6 +239,14 @@ function AppRoutes() {
         <ProtectedRoute>
           <FeatureGate feature="content_calendar">
             <CalendarPage />
+          </FeatureGate>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/analytics">
+        <ProtectedRoute>
+          <FeatureGate feature="analytics_workspace">
+            <AnalyticsPage />
           </FeatureGate>
         </ProtectedRoute>
       </Route>
