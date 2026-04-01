@@ -3,6 +3,7 @@ export { HeroSection } from './hero-section';
 export { FeaturesSection } from './features-section';
 export { PlatformsSection } from './platforms-section';
 export { VisionMissionSection } from './vision-mission-section';
+export { BrandIdentityGrid } from './brand-identity-grid';
 export { PricingSection } from './pricing-section';
 export { CtaSection } from './cta-section';
 export { LandingFooter } from './landing-footer';
