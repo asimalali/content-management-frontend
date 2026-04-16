@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <defs>
+    <linearGradient id="purpleGradient4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA"/>
+      <stop offset="100%" style="stop-color:#6B47B5"/>
+    </linearGradient>
+    <linearGradient id="lightPurple4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EDE9FE"/>
+      <stop offset="100%" style="stop-color:#DDD6FE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Modern Geometric S Mark -->
+  <g transform="translate(35, 35)">
+    <!-- Outer rounded square -->
+    <rect x="0" y="0" width="130" height="130" rx="28" fill="url(#purpleGradient4)"/>
+
+    <!-- Inner geometric S shape - inspired by Arabic س (seen) -->
+    <g transform="translate(25, 20)">
+      <!-- Top curve -->
+      <path d="M70 15 Q30 15, 20 35 Q10 55, 25 70"
+            stroke="white" stroke-width="12" fill="none" stroke-linecap="round"/>
+
+      <!-- Middle connection -->
+      <path d="M25 70 Q40 85, 55 85"
+            stroke="white" stroke-width="12" fill="none" stroke-linecap="round"/>
+
+      <!-- Bottom curve -->
+      <path d="M55 85 Q70 85, 75 70 Q80 55, 65 40"
+            stroke="white" stroke-width="12" fill="none" stroke-linecap="round" opacity="0.85"/>
+
+      <!-- Three dots beneath (Arabic س reference) -->
+      <circle cx="30" cy="100" r="6" fill="white"/>
+      <circle cx="50" cy="100" r="6" fill="white"/>
+      <circle cx="70" cy="100" r="6" fill="white"/>
+    </g>
+  </g>
+
+  <!-- Arabic Text: سَـرْد -->
+  <text x="185" y="90" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#1F2937" direction="rtl">
+    سَـرْد
+  </text>
+
+  <!-- English Text: Sard -->
+  <text x="185" y="130" font-family="Arial, sans-serif" font-size="32" font-weight="300" fill="#6B47B5" letter-spacing="3">
+    Sard
+  </text>
+
+  <!-- Tagline -->
+  <text x="185" y="160" font-family="Arial, sans-serif" font-size="11" fill="#9CA3AF" letter-spacing="1">
+    Intelligent Content Creation
+  </text>
+</svg>
